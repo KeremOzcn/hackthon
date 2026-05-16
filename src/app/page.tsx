@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
+import { createClient } from '@/lib/supabase-client'
 
 interface Subject {
   label: string
@@ -31,11 +32,33 @@ const STEPS = ['Profil', 'Ders', 'Detaylar']
 
 export default function LandingPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [loadingSubjects, setLoadingSubjects] = useState(true)
   const [selectedRole, setSelectedRole] = useState<Role>('student')
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
   const [studentName, setStudentName] = useState('')
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+        const role = profile?.role as Role
+        if (role === 'teacher') router.push('/teacher')
+        else if (role === 'parent') router.push('/parent')
+        else router.push('/student/session')
+        return
+      }
+      setCheckingAuth(false)
+    }
+    checkAuth()
+  }, [router, supabase])
 
   useEffect(() => {
     async function fetchSubjects() {
@@ -91,6 +114,13 @@ export default function LandingPage() {
     >
       <TopNav active="dashboard" />
 
+      {checkingAuth && (
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ color: 'var(--color-muted)' }}>Yükleniyor...</div>
+        </div>
+      )}
+
+      {!checkingAuth && (
       <main className="flex flex-col items-center" style={{ flex: 1, padding: '64px 20px' }}>
         {/* Badge */}
         <div
@@ -389,8 +419,31 @@ export default function LandingPage() {
               Devam Et →
             </button>
           </div>
+
+          <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '0.5px solid var(--border-subtle)', textAlign: 'center' }}>
+            <p style={{ color: 'var(--color-muted)', fontSize: '14px', marginBottom: '16px' }}>
+              Zaten hesabınız var mı?
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <a
+                href="/auth/login"
+                className="btn-outline"
+                style={{ textDecoration: 'none', display: 'inline-flex' }}
+              >
+                Giriş Yap
+              </a>
+              <a
+                href="/auth/signup"
+                className="btn-primary"
+                style={{ textDecoration: 'none', display: 'inline-flex' }}
+              >
+                Kaydol
+              </a>
+            </div>
+          </div>
         </div>
       </main>
+      )}
 
       <Footer />
     </div>
