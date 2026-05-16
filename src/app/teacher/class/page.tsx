@@ -7,7 +7,7 @@ import { Footer } from '@/components/layout/Footer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Toast } from '@/components/ui/Toast'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 
 interface ClassItem {
   id: string
@@ -50,6 +50,7 @@ const EMPTY_FORM: ClassFormState = {
 
 export default function TeacherClassPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ClassFormState>(EMPTY_FORM)

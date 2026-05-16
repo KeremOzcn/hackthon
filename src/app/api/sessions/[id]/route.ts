@@ -10,7 +10,7 @@ export async function GET(
   const { data, error } = await supabase
     .from('learning_twin_results')
     .select('id,subject,topic,twin_type,risk_level,accuracy,avg_time_seconds,hints_used,created_at,dominant_pattern,next_best_action,achievements')
-    .eq('student_id', id)
+    .eq('profile_id', id)
     .order('created_at', { ascending: false })
     .limit(50)
 

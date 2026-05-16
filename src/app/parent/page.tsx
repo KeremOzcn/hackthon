@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 import { generateStudentPDF } from '@/lib/pdf'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area } from 'recharts'
 import type { LearningTwinResult, TwinType, RiskLevel } from '@/types'
@@ -52,6 +52,7 @@ function getFirstName(name: string): string {
 
 export default function ParentPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [allData, setAllData] = useState<ParentData[]>([])
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)

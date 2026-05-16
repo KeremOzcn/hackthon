@@ -339,7 +339,7 @@ export async function POST(req: NextRequest) {
   if (sessionId) {
     query = query.eq('id', sessionId)
   } else {
-    query = query.eq('student_id', studentId).order('created_at', { ascending: false })
+    query = query.eq('profile_id', studentId).order('created_at', { ascending: false })
   }
 
   const { data, error } = await query.single()

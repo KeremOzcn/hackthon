@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 
 interface SessionRow {
   id: string
@@ -46,6 +46,7 @@ const SORT_LABELS: Record<SortBy, string> = {
 
 export default function TeacherPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
   const [riskFilter, setRiskFilter] = useState<RiskFilter>('all')

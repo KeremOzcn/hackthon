@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server'
-
-const subjects = [
-  { label: 'Matematik', topic: 'Problemler', icon: '📐', color: '#6366f1' },
-  { label: 'Fen Bilimleri', topic: 'Fizik & Kimya & Biyoloji', icon: '🔬', color: '#10b981' },
-  { label: 'Türkçe', topic: 'Dil ve Anlam', icon: '📖', color: '#f59e0b' },
-]
+import { supabase } from '@/lib/supabase'
 
 export async function GET() {
-  return NextResponse.json({ subjects })
+  try {
+    const { data: rows, error } = await supabase
+      .from('subjects')
+      .select('name, description, icon, color, topics(name)')
+      .order('name')
+
+    if (error) throw error
+
+    const subjects = (rows ?? []).map((row: any) => ({
+      label: row.name,
+      topic: row.topics?.[0]?.name ?? row.description ?? '',
+      icon: row.icon ?? '📚',
+      color: row.color ?? '#6366f1',
+    }))
+
+    return NextResponse.json({ subjects })
+  } catch (err) {
+    const error = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error }, { status: 500 })
+  }
 }

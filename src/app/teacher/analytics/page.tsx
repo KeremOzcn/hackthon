@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
 import RiskBarChart from '@/components/charts/RiskBarChart'
@@ -41,6 +41,7 @@ interface AnalyticsData {
 
 export default function TeacherAnalyticsPage() {
     const router = useRouter()
+    const supabase = createClient()
     const [loading, setLoading] = useState(true)
     const [analytics, setAnalytics] = useState<AnalyticsData>({
         totalSessions: 0,

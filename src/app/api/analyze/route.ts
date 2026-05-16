@@ -89,7 +89,7 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
       supabase
         .from('learning_twin_results')
         .select('subject, accuracy, created_at')
-        .eq('student_id', student.id)
+        .eq('profile_id', student.id)
         .order('created_at', { ascending: false }),
     ])
 
@@ -115,6 +115,7 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
     const { error: insertError } = await supabase.from('learning_twin_results').insert({
       student_id: student.id,
       student_name: student.name,
+      profile_id: student.id,
       class_id: classInfo?.id ?? null,
       class_name: classInfo?.name ?? null,
       class_grade: classInfo?.grade ?? null,

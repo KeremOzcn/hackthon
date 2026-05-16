@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
@@ -31,6 +31,7 @@ const SUBJECT_COLORS: Record<string, string> = {
 export default function CourseDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const supabase = createClient()
   const id = (params?.id as string) ?? 'matematik'
   const [course, setCourse] = useState<CourseData | null>(null)
   const [loading, setLoading] = useState(true)

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase-client'
 
 interface ClassDetail {
   id: string
@@ -63,6 +63,7 @@ const RISK_DISTRIBUTION_LABELS: Record<RiskLevel, string> = {
 export default function TeacherClassDetailPage() {
   const params = useParams<{ classId: string }>()
   const router = useRouter()
+  const supabase = createClient()
   const classId = Array.isArray(params.classId) ? params.classId[0] : params.classId
   const [detail, setDetail] = useState<ClassDetail | null>(null)
   const [students, setStudents] = useState<StudentItem[]>([])

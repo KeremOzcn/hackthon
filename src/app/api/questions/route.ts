@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { questions } from '@/lib/questions'
-import { questionsScience } from '@/lib/questions-science'
-import { questionsTurkish } from '@/lib/questions-turkish'
 import { selectAdaptiveQuestions } from '@/lib/adaptive'
-
-function getQuestionPool(subject: string) {
-  if (subject === 'Fen Bilimleri') return questionsScience
-  if (subject === 'Türkçe') return questionsTurkish
-  return questions
-}
+import type { Question } from '@/types'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -24,14 +16,14 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { data: prevSessions, error } = await supabase
+    const { data: prevSessions, error: prevError } = await supabase
       .from('learning_twin_results')
       .select('twin_type, accuracy')
-      .eq('student_id', studentId)
+      .eq('profile_id', studentId)
       .order('created_at', { ascending: false })
       .limit(1)
 
-    if (error) throw new Error(error.message)
+    if (prevError) throw new Error(prevError.message)
 
     const lastSession = prevSessions?.[0]
     const config = {
@@ -39,7 +31,36 @@ export async function GET(req: NextRequest) {
       previousAccuracy: lastSession?.accuracy ?? null,
     }
 
-    const pool = getQuestionPool(subject)
+    // Fetch subject id first
+    const { data: subjectRow } = await supabase
+      .from('subjects')
+      .select('id')
+      .eq('name', subject)
+      .single()
+
+    if (!subjectRow) {
+      return NextResponse.json({ questions: [] })
+    }
+
+    // Fetch questions from DB by subject
+    const { data: questionRows, error: qError } = await supabase
+      .from('questions')
+      .select('id, difficulty, question_text, options, correct_answer, hints, topic_id, topics(name)')
+      .eq('subject_id', subjectRow.id)
+
+    if (qError) throw new Error(qError.message)
+
+    const pool: Question[] = (questionRows ?? []).map(row => ({
+      id: row.id,
+      subject,
+      topic: (row as any).topics?.name ?? '',
+      difficulty: row.difficulty as 'easy' | 'medium' | 'hard',
+      questionText: row.question_text,
+      options: row.options as { A: string; B: string; C: string; D: string },
+      correctAnswer: row.correct_answer as 'A' | 'B' | 'C' | 'D',
+      hints: (Array.isArray(row.hints) ? row.hints : []) as [string, string, string, string],
+    }))
+
     const selected = selectAdaptiveQuestions(pool, config)
 
     return NextResponse.json({ questions: selected })
