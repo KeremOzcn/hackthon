@@ -106,4 +106,67 @@ export const questionsTurkish: Question[] = [
       'Cevap: C (Zarf)',
     ],
   },
+  {
+    id: 'tr6',
+    subject: 'Türkçe',
+    topic: 'Yazım Kuralları',
+    difficulty: 'easy',
+    questionText:
+      'Aşağıdakilerden hangisi yanlış yazılmıştır?',
+    options: {
+      A: 'bugün',
+      B: 'yarın',
+      C: 'herkez',
+      D: 'dün',
+    },
+    correctAnswer: 'C',
+    hints: [
+      'Türkçede sık yapılan yazım hatalarını düşün.',
+      '"Herkes" sözcüğü "her" ve "kes" birleşiminden oluşur.',
+      'Bu sözcük "z" ile değil "s" ile yazılır.',
+      'Cevap: C (herkez)',
+    ],
+  },
+  {
+    id: 'tr7',
+    subject: 'Türkçe',
+    topic: 'Dil Bilgisi',
+    difficulty: 'medium',
+    questionText:
+      '"Çocuklar bahçede oynuyor." cümlesinde "bahçede" sözcüğü hangi görevdedir?',
+    options: {
+      A: 'Yüklem',
+      B: 'Özne',
+      C: 'Zarf Tümleci',
+      D: 'Dolaylı Tümleç',
+    },
+    correctAnswer: 'C',
+    hints: [
+      'Yüklem "oynuyor". "Nerede oynuyorlar?" sorusunu sor.',
+      '"Nerede?" sorusuna cevap veren ögeye zarf tümleci denir.',
+      '"Bahçede" cümlede "nerede?" sorusunu yanıtlar.',
+      'Cevap: C (Zarf Tümleci)',
+    ],
+  },
+  {
+    id: 'tr8',
+    subject: 'Türkçe',
+    topic: 'Paragraf',
+    difficulty: 'hard',
+    questionText:
+      'Aşağıdaki paragrafın ana fikrini bulunuz: İnsanlar tarih boyunca iletişim ihtiyaçlarını farklı yollarla karşılamıştır. Eski çağlarda duman ve ateş sinyalleri kullanılırken, sonraları yazı ve haberciler önem kazanmıştır. Günümüzde ise dijital teknolojiler anlık iletişimi mümkün kılmaktadır. Ancak tüm bu gelişmelere rağmen iletişimin temel amacı değişmemiştir: bilgi ve duyguların karşılıklı aktarımı.',
+    options: {
+      A: 'İletişim teknikleri her dönemde aynı kalmıştır.',
+      B: 'Dijital teknolojiler iletişimi olumsuz etkilemiştir.',
+      C: 'İletişim araçları değişse de temel amaç değişmemiştir.',
+      D: 'Eski çağlarda iletişim hiç yoktu.',
+    },
+    correctAnswer: 'C',
+    hints: [
+      'Paragrafın genel mesajını bulmak için ilk ve son cümlelere odaklan.',
+      'İlk cümle: iletişim araçlarının değiştiğini söyler. Son cümle: temel amacın değişmediğini vurgular.',
+      '"Ancak" bağlacına dikkat et; bu bağlaç karşıtlık kurar ve asıl vurguyu gösterir.',
+      'Cevap: C',
+    ],
+  },
 ]

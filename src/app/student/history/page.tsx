@@ -51,7 +51,7 @@ export default function HistoryPage() {
     const raw = localStorage.getItem('learntwin_student')
     const student = safeParse<{ id?: string; name?: string }>(raw)
     if (!student?.id) { router.push('/'); return }
-    setStudentName(student.name)
+    setStudentName(student.name ?? '')
 
     supabase
       .from('learning_twin_results')

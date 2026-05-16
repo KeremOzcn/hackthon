@@ -72,3 +72,17 @@ export interface TeacherSession {
   dominantPattern: string
   teacherAction: string
 }
+
+export interface Achievement {
+  id: string
+  name: string
+  description: string
+  icon: string
+  xp: number
+}
+
+export interface GamificationResult {
+  earnedAchievements: Achievement[]
+  totalXP: number
+  newBadgesCount: number
+}

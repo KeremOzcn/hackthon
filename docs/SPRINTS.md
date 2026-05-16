@@ -18,7 +18,7 @@
 
 ## Sprint 0 — MVP (TAMAMLANDI)
 
-**Süre:** Önceki session  
+**Süre:** Önceki session
 **Odak:** Çalışan demo
 
 | Görev | Dosya | Sahip | Durum |
@@ -41,7 +41,7 @@
 
 ## Sprint 1 — Çok Konu + Öğrenci Geçmişi (0-4h)
 
-**Odak:** Tek ders sınırını kır, öğrencinin tekrar gelmesini sağla  
+**Odak:** Tek ders sınırını kır, öğrencinin tekrar gelmesini sağla
 **Öncelik:** Yüksek (demo değeri büyük)
 
 ### Dev 1 — Student History UI
@@ -57,11 +57,11 @@
 
 | Görev | Dosya | Durum |
 |-------|-------|-------|
-| Fen bilimleri soruları (5 soru) | src/lib/questions-science.ts | [ ] |
-| Türkçe soruları (5 soru) | src/lib/questions-turkish.ts | [ ] |
-| Konu listesi endpoint | src/app/api/subjects/route.ts | [ ] |
-| Öğrenci geçmişi endpoint | src/app/api/sessions/[studentId]/route.ts | [ ] |
-| analyze route: subject/topic dinamik | src/app/api/analyze/route.ts | [ ] |
+| Fen bilimleri soruları (5 soru) | src/lib/questions-science.ts | [x] |
+| Türkçe soruları (5 soru) | src/lib/questions-turkish.ts | [x] |
+| Konu listesi endpoint | src/app/api/subjects/route.ts | [x] |
+| Öğrenci geçmişi endpoint | src/app/api/sessions/[studentId]/route.ts | [x] |
+| analyze route: subject/topic dinamik | src/app/api/analyze/route.ts | [x] |
 
 ### Dev 3 — Subject Selector UI
 
@@ -92,7 +92,7 @@
 
 ## Sprint 2 — Gelişmiş Teacher Dashboard + Analytics (4-10h)
 
-**Odak:** Öğretmeni gerçek bir araçla donat  
+**Odak:** Öğretmeni gerçek bir araçla donat
 **Öncelik:** Demo etkisi için kritik
 
 ### Dev 3 — Analytics Dashboard
@@ -119,8 +119,8 @@
 
 | Görev | Dosya | Durum |
 |-------|-------|-------|
-| Supabase realtime subscription | src/app/teacher/page.tsx | [ ] |
-| Yeni session gelince liste güncellenir | src/app/teacher/page.tsx | [ ] |
+| Supabase realtime subscription | src/app/teacher/page.tsx | [x] |
+| Yeni session gelince liste güncellenir | src/app/teacher/page.tsx | [x] |
 
 ### Dev 4 — Sınıf Yönetimi Temeli
 
@@ -142,7 +142,7 @@
 
 ## Sprint 3 — PDF + Gamification (10-16h)
 
-**Odak:** Paylaşılabilir output + kullanıcı bağlılığı  
+**Odak:** Paylaşılabilir output + kullanıcı bağlılığı
 **Öncelik:** Orta (demo wow factor)
 
 ### Dev 4 — PDF Export
@@ -168,9 +168,9 @@
 
 | Görev | Dosya | Durum |
 |-------|-------|-------|
-| Rozet kuralları tanımla | src/lib/gamification.ts | [ ] |
-| Achievement kontrolü analyze sonrası | src/app/api/analyze/route.ts | [ ] |
-| DB'ye achievements alanı (jsonb migration) | supabase/schema.sql | [ ] |
+| Rozet kuralları tanımla | src/lib/gamification.ts | [x] |
+| Achievement kontrolü analyze sonrası | src/app/api/analyze/route.ts | [x] |
+| DB'ye achievements alanı (jsonb migration) | supabase/schema.sql | [x] |
 
 ### Dev 3 — Parent Portal Geliştirme
 
@@ -192,16 +192,16 @@
 
 ## Sprint 4 — Adaptif Sorular + Sınıf Yönetimi (16-20h)
 
-**Odak:** AI'yı daha akıllı yap, öğretmene sınıf yönetimi ver  
+**Odak:** AI'yı daha akıllı yap, öğretmene sınıf yönetimi ver
 **Öncelik:** Orta (teknik derinlik)
 
 ### Dev 2 — Adaptif Soru Motoru
 
 | Görev | Dosya | Durum |
 |-------|-------|-------|
-| Twin tipine göre soru seç | src/app/api/analyze/route.ts | [ ] |
-| Zorluk adaptasyonu (önceki accuracy'e göre) | src/lib/questions.ts | [ ] |
-| Soru bankası: zorluk seviyeleri ekle | tüm questions-*.ts | [ ] |
+| Twin tipine göre soru seç | src/app/api/questions/route.ts | [x] |
+| Zorluk adaptasyonu (önceki accuracy'e göre) | src/lib/adaptive.ts | [x] |
+| Soru bankası: zorluk seviyeleri ekle | tüm questions-*.ts | [x] |
 
 ### Dev 4 — Sınıf Yönetimi
 
@@ -230,7 +230,7 @@
 
 ## Sprint 5 — Polish + Deploy + Sunum (20-24h)
 
-**Odak:** Demo hazır, deploy, sıfır bug  
+**Odak:** Demo hazır, deploy, sıfır bug
 **Öncelik:** EN YÜKSEK
 
 ### Dev 2 — Deploy

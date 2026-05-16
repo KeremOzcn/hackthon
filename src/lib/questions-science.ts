@@ -106,4 +106,67 @@ export const questionsScience: Question[] = [
       'Cevap: C (Nötr)',
     ],
   },
+  {
+    id: 'sci6',
+    subject: 'Fen Bilimleri',
+    topic: 'Biyoloji',
+    difficulty: 'easy',
+    questionText:
+      'Fotosentez olayında bitkiler hangi gazı atmosfere verir?',
+    options: {
+      A: 'Azot',
+      B: 'Karbondioksit',
+      C: 'Oksijen',
+      D: 'Hidrojen',
+    },
+    correctAnswer: 'C',
+    hints: [
+      'Fotosentezde bitkiler ışık enerjisini kullanarak hangi işlemi yapar?',
+      'Klorofil ile ışığı absorbe ederler ve su ile karbondioksitten glikoz üretirler.',
+      'Bu işlem sonucunda atmosfere oksijen salınır.',
+      'Cevap: C (Oksijen)',
+    ],
+  },
+  {
+    id: 'sci7',
+    subject: 'Fen Bilimleri',
+    topic: 'Fizik',
+    difficulty: 'medium',
+    questionText:
+      '10 kg kütleyi 2 m/s² ivmeyle hareket ettirmek için kaç newton kuvvet uygulanmalıdır?',
+    options: {
+      A: '5 N',
+      B: '8 N',
+      C: '12 N',
+      D: '20 N',
+    },
+    correctAnswer: 'D',
+    hints: [
+      'Newton yasasını hatırla: F = m × a.',
+      'Kütle m = 10 kg, ivme a = 2 m/s².',
+      'F = 10 × 2 = 20 N.',
+      'Cevap: D (20 N)',
+    ],
+  },
+  {
+    id: 'sci8',
+    subject: 'Fen Bilimleri',
+    topic: 'Kimya',
+    difficulty: 'hard',
+    questionText:
+      '200 mL %10 NaCl çözeltisi ile 300 mL %20 NaCl çözeltisi karıştırılıyor. Oluşan karışımın kitlece yüzde konsantrasyonu yaklaşık kaçtır? (Yoğunlukları eşit kabul ediniz.)',
+    options: {
+      A: '%14',
+      B: '%15',
+      C: '%16',
+      D: '%18',
+    },
+    correctAnswer: 'C',
+    hints: [
+      'Her çözeltideki tuz miktarını ayrı ayrı hesapla.',
+      '1. çözelti: 200 × 0,10 = 20 g tuz. 2. çözelti: 300 × 0,20 = 60 g tuz.',
+      'Toplam tuz = 80 g. Toplam çözelti = 200 + 300 = 500 mL (yaklaşık 500 g).',
+      'Yüzde = (80/500) × 100 = %16. Cevap: C (%16)',
+    ],
+  },
 ]

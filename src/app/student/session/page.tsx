@@ -31,7 +31,9 @@ export default function SessionPage() {
   const [startTime, setStartTime] = useState(Date.now())
   const [elapsed, setElapsed] = useState(0)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(true)
   const [subjectMeta, setSubjectMeta] = useState({ subject: 'Matematik', topic: 'Problemler' })
+  const [questionSet, setQuestionSet] = useState<Question[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function safeParse<T>(value: string | null): T | null {
@@ -49,9 +51,29 @@ export default function SessionPage() {
     if (parsed?.subject && parsed?.topic) setSubjectMeta({ subject: parsed.subject, topic: parsed.topic })
   }, [])
 
-  const questionSet = getQuestions(subjectMeta.subject)
+  useEffect(() => {
+    let cancelled = false
+    async function loadAdaptive() {
+      setIsLoadingQuestions(true)
+      const studentRaw = localStorage.getItem('learntwin_student')
+      const student = studentRaw ? JSON.parse(studentRaw) : { id: 'demo', name: 'Öğrenci' }
+      try {
+        const res = await fetch(`/api/questions?studentId=${encodeURIComponent(student.id)}&subject=${encodeURIComponent(subjectMeta.subject)}`)
+        if (!res.ok) throw new Error('Adaptive load failed')
+        const data = await res.json()
+        if (!cancelled) setQuestionSet(data.questions ?? [])
+      } catch {
+        if (!cancelled) setQuestionSet(getQuestions(subjectMeta.subject))
+      } finally {
+        if (!cancelled) setIsLoadingQuestions(false)
+      }
+    }
+    loadAdaptive()
+    return () => { cancelled = true }
+  }, [subjectMeta.subject])
+
   const question = questionSet[currentIdx]
-  const progress = (currentIdx / questionSet.length) * 100
+  const progress = questionSet.length > 0 ? (currentIdx / questionSet.length) * 100 : 0
 
   useEffect(() => {
     setStartTime(Date.now())
@@ -126,6 +148,35 @@ export default function SessionPage() {
           </div>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
+    )
+  }
+
+  if (isLoadingQuestions) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="text-center flex flex-col items-center gap-6">
+          <div style={{ position: 'relative', width: '64px', height: '64px' }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid rgba(99,102,241,0.2)' }} />
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid transparent', borderTopColor: '#6366f1', animation: 'spin 1s linear infinite' }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '20px', marginBottom: '8px' }}>Sorular hazırlanıyor...</div>
+            <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>Adaptif soru motoru çalışıyor</div>
+          </div>
+        </div>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </main>
+    )
+  }
+
+  if (!question) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div style={{ fontWeight: 700, fontSize: '20px', marginBottom: '8px' }}>Soru yüklenemedi</div>
+          <button className="btn-primary" onClick={() => router.push('/')} style={{ marginTop: '16px' }}>Ana Sayfaya Dön</button>
+        </div>
       </main>
     )
   }

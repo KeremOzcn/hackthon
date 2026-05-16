@@ -106,4 +106,67 @@ export const questions: Question[] = [
       '260 × 0,90 = 234 TL. Cevap: B',
     ],
   },
+  {
+    id: 'q6',
+    subject: 'Matematik',
+    topic: 'Problemler',
+    difficulty: 'easy',
+    questionText:
+      'Bir sınıfta 30 öğrenci vardır. Öğrencilerin beşte ikisi kız olduğuna göre, sınıfta kaç erkek öğrenci vardır?',
+    options: {
+      A: '10',
+      B: '12',
+      C: '16',
+      D: '18',
+    },
+    correctAnswer: 'D',
+    hints: [
+      'Toplam öğrenci 30. Kız sayısını bulmak için 30 sayısının 2/5 ini hesapla.',
+      'Kız sayısı = 30 × (2/5) = 12.',
+      'Erkek sayısı = Toplam öğrenci - Kız sayısı = 30 - 12.',
+      '30 - 12 = 18. Cevap: D (18)',
+    ],
+  },
+  {
+    id: 'q7',
+    subject: 'Matematik',
+    topic: 'Problemler',
+    difficulty: 'medium',
+    questionText:
+      'Bir öğrencinin 3 sınav notunun ortalaması 72 dir. 4. sınavdan 88 alırsa dört sınavın ortalaması kaç olur?',
+    options: {
+      A: '74',
+      B: '76',
+      C: '78',
+      D: '80',
+    },
+    correctAnswer: 'B',
+    hints: [
+      '3 sınavın toplamını bul: Ortalama × Sayı = 72 × 3.',
+      'Toplam = 216. 4 sınav toplamı = 216 + 88 = 304.',
+      'Yeni ortalama = 304 ÷ 4.',
+      '304 ÷ 4 = 76. Cevap: B (76)',
+    ],
+  },
+  {
+    id: 'q8',
+    subject: 'Matematik',
+    topic: 'Problemler',
+    difficulty: 'hard',
+    questionText:
+      'Anne ile kızının yaşları toplamı 44 tür. 4 yıl önce annenin yaşı kızının yaşının 5 katıymış. Buna göre anne kaç yaşındadır?',
+    options: {
+      A: '32',
+      B: '34',
+      C: '36',
+      D: '38',
+    },
+    correctAnswer: 'B',
+    hints: [
+      'Şimdi anne x, kız y olsun. x + y = 44. 4 yıl önce: x - 4 = 5(y - 4).',
+      'Denklemi aç: x - 4 = 5y - 20 → x = 5y - 16. Birinci denkleme yerleştir.',
+      '5y - 16 + y = 44 → 6y = 60 → y = 10. Kız 10 yaşında.',
+      'Anne = 44 - 10 = 34. Cevap: B (34)',
+    ],
+  },
 ]

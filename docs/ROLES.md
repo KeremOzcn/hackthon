@@ -9,11 +9,11 @@
 
 | Kişi | Unvan | Birincil alan |
 |------|-------|---------------|
-| Dev 1 | Frontend Lead | Öğrenci akışı, UI/UX, animasyon |
-| Dev 2 | Backend / AI Lead | API route'ları, Claude entegrasyonu, DB |
-| Dev 3 | Dashboard Dev | Öğretmen + Veli sayfaları |
-| Dev 4 | Full-stack Dev | Yeni özellikler, entegrasyonlar, bug hunt |
-| PM | Product Manager + Sunum | Hikaye, QA koordinasyonu, sunum hazırlığı |
+| Dev 1 | Frontend Lead | Öğrenci akışı, UI/UX, animasyon | Kerem Özcan
+| Dev 2 | Backend / AI Lead | API route'ları, Claude entegrasyonu, DB | Yağız Efe Gökçe
+| Dev 3 | Dashboard Dev | Öğretmen + Veli sayfaları | Çiğdem Gökdağ
+| Dev 4 | Full-stack Dev | Yeni özellikler, entegrasyonlar, bug hunt | Ezgi Turan
+| PM | Product Manager + Sunum | Hikaye, QA koordinasyonu, sunum hazırlığı | Murat Emre Doğan
 
 ---
 
