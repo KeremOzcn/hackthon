@@ -7,7 +7,7 @@ create table if not exists learning_twin_results (
   student_name      text not null,
   subject           text not null default 'Matematik',
   topic             text not null default 'Problemler',
-  twin_type         text not null,
+  twin_type         text not null check (twin_type in ('Hızlı ama Dikkatsiz', 'Yavaş ama Sağlam', 'Konuyu Biliyor ama Modelleyemiyor', 'İpucu Bağımlısı', 'Sınav Panikçisi')),
   dominant_pattern  text,
   cognitive_issue   text,
   behavioral_issue  text,
@@ -20,15 +20,19 @@ create table if not exists learning_twin_results (
   avg_time_seconds  integer,
   hints_used        integer default 0,
   raw_answers       jsonb,
+  achievements      jsonb default '[]',
   created_at        timestamptz not null default now()
 );
 
 create index if not exists idx_results_created_at on learning_twin_results(created_at desc);
 create index if not exists idx_results_risk_level on learning_twin_results(risk_level);
 create index if not exists idx_results_student_id on learning_twin_results(student_id);
+create index if not exists idx_results_student_created_at on learning_twin_results(student_id, created_at desc);
 
 alter table learning_twin_results enable row level security;
 
+-- TODO: WARNING — This RLS policy is wide open for demo purposes only.
+-- Must be restricted before production.
 create policy "Allow all for demo"
   on learning_twin_results
   for all

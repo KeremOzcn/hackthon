@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { supabase } from '@/lib/supabase'
+import { computeAchievements } from '@/lib/gamification'
 import type { Answer, LearningTwinResult } from '@/types'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -13,12 +14,19 @@ interface RequestBody {
 }
 
 function computeStats(answers: Answer[]) {
+  if (answers.length === 0) {
+    return { accuracy: 0, avgTimeSeconds: 0, hintsUsed: 0, highConfidenceWrong: 0 }
+  }
   const correct = answers.filter(a => a.isCorrect).length
   const accuracy = Math.round((correct / answers.length) * 100)
   const avgTime = Math.round(answers.reduce((s, a) => s + a.timeSpentSeconds, 0) / answers.length)
   const hintsUsed = answers.reduce((s, a) => s + a.hintLevelUsed, 0)
   const highConfidenceWrong = answers.filter(a => a.confidence === 'high' && !a.isCorrect).length
   return { accuracy, avgTimeSeconds: avgTime, hintsUsed, highConfidenceWrong }
+}
+
+function sanitizeForPrompt(text: string): string {
+  return text.replace(/[`{}]/g, '')
 }
 
 export async function POST(req: NextRequest) {
@@ -32,17 +40,21 @@ export async function POST(req: NextRequest) {
   const { student, subject, topic, answers } = body
   const stats = computeStats(answers)
 
-  const prompt = `Sen İşler LearnTwin AI'ın eğitim analisti yapay zekasısın. TYT matematik problemleri bölümünde öğrenci çözüm davranışını analiz ediyorsun.
+  const safeSubject = sanitizeForPrompt(subject)
+  const safeTopic = sanitizeForPrompt(topic)
+  const safeStudentName = sanitizeForPrompt(student.name)
 
-Öğrenci: ${student.name}
-Ders: ${subject} - ${topic}
+  const prompt = `Sen İşler LearnTwin AI'ın eğitim analisti yapay zekasısın. ${safeSubject} - ${safeTopic} bölümünde öğrenci çözüm davranışını analiz ediyorsun.
+
+Öğrenci: ${safeStudentName}
+Ders: ${safeSubject} - ${safeTopic}
 Doğruluk: ${stats.accuracy}% (${answers.filter(a => a.isCorrect).length}/${answers.length} doğru)
 Ortalama çözüm süresi: ${stats.avgTimeSeconds} saniye
 Toplam ipucu kullanımı: ${stats.hintsUsed}
 Yüksek eminlikle yanlış: ${stats.highConfidenceWrong}
 
 Soru detayları:
-${answers.map((a, i) => `Soru ${i + 1}: ${a.isCorrect ? '✓ Doğru' : '✗ Yanlış'} | Süre: ${a.timeSpentSeconds}s | Eminlik: ${a.confidence} | İpucu: ${a.hintLevelUsed} | Düşünce: "${a.studentReasoning || '(yok)'}"`).join('\n')}
+${answers.map((a, i) => `Soru ${i + 1}: ${a.isCorrect ? '✓ Doğru' : '✗ Yanlış'} | Süre: ${a.timeSpentSeconds}s | Eminlik: ${a.confidence} | İpucu: ${a.hintLevelUsed} | Düşünce: "${sanitizeForPrompt(a.studentReasoning || '(yok)')}"`).join('\n')}
 
 5 Learning Twin tipi:
 1. "Hızlı ama Dikkatsiz" - Hızlı çözüyor, kolay sorularda hata yapıyor, yüksek eminlikle yanlış yapıyor
@@ -66,20 +78,39 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
 }`
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
-    })
+    const [message, { data: prevSessions }] = await Promise.all([
+      client.messages.create({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      supabase
+        .from('learning_twin_results')
+        .select('subject, accuracy, created_at')
+        .eq('student_id', student.id)
+        .order('created_at', { ascending: false }),
+    ])
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : ''
-    const jsonMatch = raw.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) throw new Error('No JSON in response')
-
-    const analysis = JSON.parse(jsonMatch[0])
+    let analysis: any
+    try {
+      analysis = JSON.parse(raw)
+    } catch {
+      // Fallback: find the first top-level JSON object without the 's' flag (ES2018)
+      const match = raw.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
+      if (!match) throw new Error('No JSON in response')
+      analysis = JSON.parse(match[0])
+    }
     const result: LearningTwinResult = { ...analysis, stats }
 
-    supabase.from('learning_twin_results').insert({
+    const gamification = computeAchievements(
+      prevSessions || [],
+      subject,
+      answers,
+      result
+    )
+
+    const { error: insertError } = await supabase.from('learning_twin_results').insert({
       student_id: student.id,
       student_name: student.name,
       subject,
@@ -95,10 +126,16 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
       avg_time_seconds: stats.avgTimeSeconds,
       hints_used: stats.hintsUsed,
       raw_answers: answers,
+      achievements: gamification.earnedAchievements.map(a => ({ id: a.id, name: a.name, xp: a.xp })),
       created_at: new Date().toISOString(),
-    }).then(() => {})
+    })
 
-    return NextResponse.json(result)
+    if (insertError) {
+      console.error('Failed to persist learning twin result:', insertError)
+      return NextResponse.json({ ...result, gamification, persisted: false })
+    }
+
+    return NextResponse.json({ ...result, gamification, persisted: true })
   } catch (err) {
     const error = err instanceof Error ? err.message : 'Unknown error'
     return NextResponse.json({ error }, { status: 500 })
