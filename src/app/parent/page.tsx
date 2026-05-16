@@ -22,19 +22,6 @@ interface ParentData {
   dominant_pattern: string
 }
 
-const MOCK_DATA: ParentData = {
-  student_name: 'Ali Yılmaz',
-  twin_type: 'Konuyu Biliyor ama Modelleyemiyor',
-  accuracy: 40,
-  parent_message: 'Ali düzenli çalışıyor ancak uzun problem sorularında ilk adımı kurmakta zorlanıyor. Daha fazla soru çözmek yerine kısa soru anlama egzersizleri daha etkili olacaktır.',
-  next_best_action: 'Fizik temel tekrar: Sisteme Ali\'ye özel olarak atanan "Dinamik Temelleri" mini kursunu bu hafta sonu tamamlamasını sağlayın. Zaman yönetimi: Deneme sınavlarında süre yetiştirme konusunda pratik yapması için sisteme eklenen zamanlı testleri kullanmasını hatırlatın. Motivasyon: Matematik dersindeki başarısını takdir ederek bu motivasyonu diğer derslere aktarmasına yardımcı olun.',
-  risk_level: 'medium',
-  created_at: new Date().toISOString(),
-  subject: 'Matematik',
-  topic: 'İntegral',
-  dominant_pattern: 'Konuyu Biliyor ama Modelleyemiyor',
-}
-
 function toLearningTwinResult(d: ParentData): LearningTwinResult {
   return {
     twinType: d.twin_type as TwinType,
@@ -82,8 +69,8 @@ export default function ParentPage() {
         setAllData(validRows)
         setSelectedStudent(validRows[0].student_name)
       } else {
-        setAllData([MOCK_DATA])
-        setSelectedStudent(MOCK_DATA.student_name)
+        setAllData([])
+        setSelectedStudent(null)
       }
       setLoading(false)
     }
@@ -105,16 +92,14 @@ export default function ParentPage() {
   const students = Array.from(grouped.keys())
   const currentStudent = selectedStudent ?? students[0] ?? null
   const sessions = currentStudent ? (grouped.get(currentStudent) ?? []) : []
-  const d = sessions[0] ?? MOCK_DATA
+  const d = sessions[0]
 
-  const firstName = getFirstName(d.student_name)
-  const initials = getInitials(d.student_name)
+  const firstName = d ? getFirstName(d.student_name) : ''
+  const initials = d ? getInitials(d.student_name) : ''
 
-  const actionItems = d.next_best_action
-    .split(/[.\n]/)
-    .map(s => s.trim())
-    .filter(s => s.length > 15)
-    .slice(0, 3)
+  const actionItems = d
+    ? d.next_best_action.split(/[.\n]/).map(s => s.trim()).filter(s => s.length > 15).slice(0, 3)
+    : []
 
   const trendData = useMemo(() => {
     return sessions
@@ -143,10 +128,7 @@ export default function ParentPage() {
       const avg = Math.round(stats.accuracy / stats.count)
       return { subject, accuracy: avg, trend: avg >= 60 ? 'up' as const : 'down' as const }
     })
-    return result.length > 0 ? result : [
-      { subject: 'Matematik', accuracy: d.accuracy, trend: 'up' as const },
-      { subject: 'Fen Bilimleri', accuracy: Math.max(0, d.accuracy - 12), trend: 'down' as const },
-    ]
+    return result
   }, [sessions, currentStudent, grouped, d])
 
   async function handleDownloadPDF() {
@@ -181,6 +163,12 @@ export default function ParentPage() {
 
           {loading ? (
             <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-muted)' }}>Yükleniyor...</div>
+          ) : !d ? (
+            <div className="glass-card" style={{ padding: '40px', textAlign: 'center' }}>
+              <div style={{ fontSize: '40px', marginBottom: '12px' }}>📋</div>
+              <div style={{ fontWeight: 700, marginBottom: '6px' }}>Henüz veri yok</div>
+              <div style={{ color: 'var(--color-muted)', fontSize: '13px' }}>Öğrenci verisi bulunamadı.</div>
+            </div>
           ) : (
             <>
               {/* Child selector */}

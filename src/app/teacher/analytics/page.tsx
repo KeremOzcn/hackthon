@@ -29,30 +29,6 @@ const twinColorMap: Record<string, string> = {
     'Sınav Panikçisi': '#a78bfa',
 }
 
-const fallbackRiskDistribution = [
-    { name: 'Düşük Risk', students: 12, color: '#10b981' },
-    { name: 'Orta Risk', students: 8, color: '#f59e0b' },
-    { name: 'Yüksek Risk', students: 5, color: '#f43f5e' },
-]
-
-const fallbackTwinDistribution = [
-    { name: 'Hızlı ama Dikkatsiz', value: 8, color: '#f43f5e' },
-    { name: 'Yavaş ama Sağlam', value: 12, color: '#10b981' },
-    { name: 'Konuyu Biliyor ama Modelleyemiyor', value: 6, color: '#f59e0b' },
-    { name: 'İpucu Bağımlısı', value: 9, color: '#6366f1' },
-    { name: 'Sınav Panikçisi', value: 5, color: '#a78bfa' },
-]
-
-const fallbackAccuracyTrend = [
-    { date: '10 Mayıs', accuracy: 45 },
-    { date: '11 Mayıs', accuracy: 52 },
-    { date: '12 Mayıs', accuracy: 48 },
-    { date: '13 Mayıs', accuracy: 61 },
-    { date: '14 Mayıs', accuracy: 59 },
-    { date: '15 Mayıs', accuracy: 68 },
-    { date: '16 Mayıs', accuracy: 75 },
-]
-
 interface AnalyticsData {
     totalSessions: number
     avgAccuracy: number
@@ -67,13 +43,13 @@ export default function TeacherAnalyticsPage() {
     const router = useRouter()
     const [loading, setLoading] = useState(true)
     const [analytics, setAnalytics] = useState<AnalyticsData>({
-        totalSessions: 34,
-        avgAccuracy: 61,
-        highRiskCount: 5,
-        avgHints: 1.8,
-        riskDistribution: fallbackRiskDistribution,
-        twinDistribution: fallbackTwinDistribution,
-        accuracyTrend: fallbackAccuracyTrend,
+        totalSessions: 0,
+        avgAccuracy: 0,
+        highRiskCount: 0,
+        avgHints: 0,
+        riskDistribution: [],
+        twinDistribution: [],
+        accuracyTrend: [],
     })
 
     useEffect(() => {
@@ -152,7 +128,7 @@ export default function TeacherAnalyticsPage() {
                     avgHints,
                     riskDistribution,
                     twinDistribution,
-                    accuracyTrend: sortedDates.length ? sortedDates : fallbackAccuracyTrend,
+                    accuracyTrend: sortedDates,
                 })
             } catch {
                 // keep fallback data

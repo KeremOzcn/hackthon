@@ -20,14 +20,6 @@ interface SessionRow {
 
 const RISK_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
 
-const MOCK_SESSIONS: SessionRow[] = [
-  { id: '1', student_name: 'Ahmet Yılmaz', twin_type: 'Konuyu Biliyor ama Modelleyemiyor', risk_level: 'high', accuracy: 42, dominant_pattern: 'Problem metnini denkleme çevirmede güçlük', teacher_action: 'Değişken seçimi egzersizi yaptırın ve "Belirli İntegral Hesabı" konusundaki dersleri tekrar edin.', created_at: new Date().toISOString(), subject: 'Matematik' },
-  { id: '2', student_name: 'Elif Kaya', twin_type: 'Hızlı ama Dikkatsiz', risk_level: 'medium', accuracy: 68, dominant_pattern: 'Hızlı yanıt, kolay sorularda dikkat hatası', teacher_action: 'Cevap öncesi kontrol rutini önerin.', created_at: new Date().toISOString(), subject: 'Fen Bilimleri' },
-  { id: '3', student_name: 'Can Demir', twin_type: 'İpucu Bağımlısı', risk_level: 'high', accuracy: 80, dominant_pattern: 'Yüksek ipucu kullanımı, bağımsız çözüm güçlüğü', teacher_action: 'Küçük yönlendirmeli pratik yapın.', created_at: new Date().toISOString(), subject: 'Matematik' },
-  { id: '4', student_name: 'Ayşe Türk', twin_type: 'Yavaş ama Sağlam', risk_level: 'low', accuracy: 100, dominant_pattern: 'Yüksek doğruluk, uzun çözüm süresi', teacher_action: 'Süre kontrollü pratik önerin.', created_at: new Date().toISOString(), subject: 'Türkçe' },
-  { id: '5', student_name: 'Mert Şahin', twin_type: 'Sınav Panikçisi', risk_level: 'medium', accuracy: 60, dominant_pattern: 'Baskı altında doğruluk düşüyor', teacher_action: 'Mikro sınav simülasyonu uygulayın.', created_at: new Date().toISOString(), subject: 'Matematik' },
-]
-
 type RiskFilter = 'all' | 'low' | 'medium' | 'high'
 type SubjectFilter = 'all' | 'Matematik' | 'Fen Bilimleri' | 'Türkçe'
 type SortBy = 'risk' | 'date' | 'accuracy'
@@ -72,7 +64,7 @@ export default function TeacherPage() {
       if (data && data.length > 0) {
         setSessions([...data].sort((a, b) => (RISK_ORDER[a.risk_level] ?? 3) - (RISK_ORDER[b.risk_level] ?? 3)))
       } else {
-        setSessions(MOCK_SESSIONS)
+        setSessions([])
       }
       setLoading(false)
     }

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
+import { createClient } from '@/lib/supabase-client'
 import type { RiskLevel } from '@/types'
 
 interface SessionSummary {
@@ -22,13 +23,6 @@ interface SessionSummary {
 
 const PAGE_SIZE = 4
 
-const MOCK_SESSIONS: SessionSummary[] = [
-  { id: '1', subject: 'Matematik', topic: 'Türev ve İntegral İleri Seviye', twinType: 'Yavaş ama Sağlam', riskLevel: 'low', accuracy: 92, avgTimeSeconds: 48, hintsUsed: 0, completedAt: '2024-10-12T10:00:00Z', dominantPattern: 'Yüksek doğruluk, uzun süre', nextBestAction: 'Süre yönetimini geliştir' },
-  { id: '2', subject: 'Kimya', topic: 'Organik Kimya Temelleri', twinType: 'Hızlı ama Dikkatsiz', riskLevel: 'medium', accuracy: 64, avgTimeSeconds: 22, hintsUsed: 1, completedAt: '2024-10-08T14:00:00Z', dominantPattern: 'Hızlı yanıt, dikkat hatası', nextBestAction: 'Cevap kontrol rutini uygula' },
-  { id: '3', subject: 'Fizik', topic: 'Modern Fizik ve Görelilik', twinType: 'Konuyu Biliyor ama Modelleyemiyor', riskLevel: 'high', accuracy: 45, avgTimeSeconds: 61, hintsUsed: 3, completedAt: '2024-10-01T09:00:00Z', dominantPattern: 'Problem metnini denkleme çevirmede güçlük', nextBestAction: 'Temel formül pratikleri yap' },
-  { id: '4', subject: 'Biyoloji', topic: 'Hücre Biyolojisi Genel Tarama', twinType: 'Yavaş ama Sağlam', riskLevel: 'low', accuracy: 88, avgTimeSeconds: 55, hintsUsed: 0, completedAt: '2024-09-25T11:00:00Z', dominantPattern: 'Yüksek doğruluk, sistematik çalışma', nextBestAction: 'Hızı artırıcı pratikler yap' },
-]
-
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
@@ -41,25 +35,24 @@ const RISK_CONFIG: Record<string, { label: string; color: string; bg: string }> 
 
 export default function HistoryPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [sessions, setSessions] = useState<SessionSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(0)
 
-  function safeParse<T>(value: string | null): T | null {
-    if (!value) return null
-    try { return JSON.parse(value) as T } catch { return null }
-  }
-
   useEffect(() => {
-    const student = safeParse<{ id?: string; name?: string }>(localStorage.getItem('learntwin_student'))
-    if (!student?.id) { router.push('/'); return }
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth/login'); return }
 
-    fetch(`/api/sessions/${student.id}`)
-      .then(r => r.json())
-      .then(data => { setSessions(data.sessions?.length ? data.sessions : MOCK_SESSIONS); setLoading(false) })
-      .catch(() => { setSessions(MOCK_SESSIONS); setLoading(false) })
-  }, [router])
+      fetch(`/api/sessions/${user.id}`)
+        .then(r => r.json())
+        .then(data => { setSessions(data.sessions ?? []); setLoading(false) })
+        .catch(() => { setSessions([]); setLoading(false) })
+    }
+    load()
+  }, [router, supabase])
 
   const streak = (() => {
     let count = 0

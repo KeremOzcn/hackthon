@@ -7,8 +7,9 @@ import { Footer } from '@/components/layout/Footer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Toast } from '@/components/ui/Toast'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
+import { supabase } from '@/lib/supabase'
 
-type ClassItem = {
+interface ClassItem {
   id: string
   name: string
   grade: string
@@ -19,19 +20,13 @@ type ClassItem = {
   lastUpdated: string
 }
 
-type ClassFormState = {
+interface ClassFormState {
   name: string
   grade: string
   advisor: string
   studentCount: string
   focus: string
 }
-
-const INITIAL_CLASSES: ClassItem[] = [
-  { id: '9a', name: '9-A', grade: '9. Sınıf', advisor: 'Ayşe Öğretmen', studentCount: 28, focus: 'Temel problem çözme', riskLevel: 'medium', lastUpdated: 'Bugün' },
-  { id: '10b', name: '10-B', grade: '10. Sınıf', advisor: 'Mert Öğretmen', studentCount: 31, focus: 'Sınav panik yönetimi', riskLevel: 'high', lastUpdated: 'Dün' },
-  { id: '11c', name: '11-C', grade: '11. Sınıf', advisor: 'Elif Öğretmen', studentCount: 24, focus: 'Hız ve doğruluk dengesi', riskLevel: 'low', lastUpdated: '2 gün önce' },
-]
 
 const RISK_LABEL: Record<ClassItem['riskLevel'], string> = {
   low: 'Düşük risk',
@@ -55,15 +50,69 @@ const EMPTY_FORM: ClassFormState = {
 
 export default function TeacherClassPage() {
   const router = useRouter()
-  const [classes, setClasses] = useState<ClassItem[]>(INITIAL_CLASSES)
+  const [classes, setClasses] = useState<ClassItem[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<ClassFormState>(EMPTY_FORM)
   const [toast, setToast] = useState<{ title: string; message: string; variant: 'success' | 'error' | 'warning' | 'info' } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 400)
-    return () => window.clearTimeout(timer)
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setIsLoading(false); return }
+
+      const { data: rows } = await supabase
+        .from('classes')
+        .select('id, name, grade, focus, created_at')
+        .eq('teacher_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (!rows) { setIsLoading(false); return }
+
+      // Fetch enrollment counts
+      const { data: enrollments } = await supabase
+        .from('class_enrollments')
+        .select('class_id')
+        .in('class_id', rows.map(r => r.id))
+
+      const countMap = new Map<string, number>()
+      for (const e of (enrollments ?? [])) {
+        countMap.set(e.class_id, (countMap.get(e.class_id) ?? 0) + 1)
+      }
+
+      // Compute risk from latest results of enrolled students
+      const { data: results } = await supabase
+        .from('learning_twin_results')
+        .select('class_id, risk_level')
+        .in('class_id', rows.map(r => r.id))
+
+      const riskMap = new Map<string, string>()
+      for (const r of (results ?? [])) {
+        if (!r.class_id) continue
+        const existing = riskMap.get(r.class_id)
+        if (!existing || r.risk_level === 'high') {
+          riskMap.set(r.class_id, r.risk_level)
+        }
+      }
+
+      const mapped: ClassItem[] = rows.map(row => {
+        const count = countMap.get(row.id) ?? 0
+        return {
+          id: row.id,
+          name: row.name,
+          grade: row.grade ?? '',
+          advisor: user.email?.split('@')[0] ?? 'Öğretmen',
+          studentCount: count,
+          focus: row.focus ?? '',
+          riskLevel: (riskMap.get(row.id) as 'low' | 'medium' | 'high') ?? 'low',
+          lastUpdated: 'Az önce',
+        }
+      })
+
+      setClasses(mapped)
+      setIsLoading(false)
+    }
+    load()
   }, [])
 
   const stats = useMemo(() => {
@@ -88,7 +137,7 @@ export default function TeacherClassPage() {
     })
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     const studentCount = Number.parseInt(form.studentCount, 10)
@@ -101,34 +150,74 @@ export default function TeacherClassPage() {
       return
     }
 
-    const nextItem: ClassItem = {
-      id: editingId ?? crypto.randomUUID(),
-      name: form.name.trim(),
-      grade: form.grade.trim(),
-      advisor: form.advisor.trim(),
-      studentCount,
-      focus: form.focus.trim(),
-      riskLevel: studentCount >= 30 ? 'high' : studentCount >= 25 ? 'medium' : 'low',
-      lastUpdated: 'Az önce',
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setToast({ title: 'Oturum hatası', message: 'Lütfen tekrar giriş yapın.', variant: 'error' })
+      return
     }
 
-    setClasses(current => {
-      if (editingId) {
-        return current.map(item => (item.id === editingId ? nextItem : item))
-      }
-      return [nextItem, ...current]
-    })
+    if (editingId) {
+      const { error } = await supabase
+        .from('classes')
+        .update({ name: form.name.trim(), grade: form.grade.trim(), focus: form.focus.trim() })
+        .eq('id', editingId)
+        .eq('teacher_id', user.id)
 
-    setToast({
-      title: editingId ? 'Sınıf güncellendi' : 'Sınıf oluşturuldu',
-      message: `${nextItem.name} artık sınıf listenizde.`,
-      variant: 'success',
-    })
+      if (error) {
+        setToast({ title: 'Hata', message: 'Sınıf güncellenemedi.', variant: 'error' })
+        return
+      }
+
+      setClasses(current => current.map(item => item.id === editingId
+        ? { ...item, name: form.name.trim(), grade: form.grade.trim(), focus: form.focus.trim(), lastUpdated: 'Az önce' }
+        : item
+      ))
+      setToast({ title: 'Sınıf güncellendi', message: `${form.name.trim()} güncellendi.`, variant: 'success' })
+    } else {
+      const { data: newRow, error } = await supabase
+        .from('classes')
+        .insert({ teacher_id: user.id, name: form.name.trim(), grade: form.grade.trim(), focus: form.focus.trim() })
+        .select('id')
+        .single()
+
+      if (error || !newRow) {
+        setToast({ title: 'Hata', message: 'Sınıf oluşturulamadı.', variant: 'error' })
+        return
+      }
+
+      const nextItem: ClassItem = {
+        id: newRow.id,
+        name: form.name.trim(),
+        grade: form.grade.trim(),
+        advisor: user.email?.split('@')[0] ?? 'Öğretmen',
+        studentCount: 0,
+        focus: form.focus.trim(),
+        riskLevel: 'low',
+        lastUpdated: 'Az önce',
+      }
+      setClasses(current => [nextItem, ...current])
+      setToast({ title: 'Sınıf oluşturuldu', message: `${nextItem.name} artık sınıf listenizde.`, variant: 'success' })
+    }
+
     setEditingId(null)
     setForm(EMPTY_FORM)
   }
 
-  function removeClass(id: string) {
+  async function removeClass(id: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { error } = await supabase
+      .from('classes')
+      .delete()
+      .eq('id', id)
+      .eq('teacher_id', user.id)
+
+    if (error) {
+      setToast({ title: 'Hata', message: 'Sınıf silinemedi.', variant: 'error' })
+      return
+    }
+
     setClasses(current => current.filter(item => item.id !== id))
     setToast({
       title: 'Sınıf silindi',

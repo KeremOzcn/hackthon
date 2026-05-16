@@ -1,5 +1,9 @@
 -- İşler LearnTwin AI — Classes, Enrollments, Subjects, Topics, Questions
 
+-- ============================================
+-- 1. CREATE ALL TABLES FIRST
+-- ============================================
+
 -- Classes (created by teachers)
 create table if not exists classes (
   id uuid primary key default gen_random_uuid(),
@@ -10,22 +14,6 @@ create table if not exists classes (
   created_at timestamptz default now()
 );
 
-alter table classes enable row level security;
-
-create policy "Teachers can manage their own classes"
-  on classes for all
-  using (auth.uid() = teacher_id);
-
-create policy "Students can view classes they are enrolled in"
-  on classes for select
-  using (
-    exists (
-      select 1 from class_enrollments
-      where class_enrollments.class_id = classes.id
-        and class_enrollments.student_id = auth.uid()
-    )
-  );
-
 -- Class Enrollments (students in classes)
 create table if not exists class_enrollments (
   id uuid primary key default gen_random_uuid(),
@@ -35,22 +23,6 @@ create table if not exists class_enrollments (
   unique(class_id, student_id)
 );
 
-alter table class_enrollments enable row level security;
-
-create policy "Teachers can manage enrollments for their classes"
-  on class_enrollments for all
-  using (
-    exists (
-      select 1 from classes
-      where classes.id = class_enrollments.class_id
-        and classes.teacher_id = auth.uid()
-    )
-  );
-
-create policy "Students can view their own enrollments"
-  on class_enrollments for select
-  using (auth.uid() = student_id);
-
 -- Parent-Student Links
 create table if not exists parent_students (
   id uuid primary key default gen_random_uuid(),
@@ -59,16 +31,6 @@ create table if not exists parent_students (
   linked_at timestamptz default now(),
   unique(parent_id, student_id)
 );
-
-alter table parent_students enable row level security;
-
-create policy "Parents can manage their own links"
-  on parent_students for all
-  using (auth.uid() = parent_id);
-
-create policy "Students can see who is linked to them"
-  on parent_students for select
-  using (auth.uid() = student_id);
 
 -- Subjects (replace hardcoded list)
 create table if not exists subjects (
@@ -103,8 +65,68 @@ create table if not exists questions (
   created_at timestamptz default now()
 );
 
+-- ============================================
+-- 2. ENABLE RLS ON ALL TABLES
+-- ============================================
+
+alter table classes enable row level security;
+alter table class_enrollments enable row level security;
+alter table parent_students enable row level security;
 alter table questions enable row level security;
 
+-- ============================================
+-- 3. CREATE ALL POLICIES (after all tables exist)
+-- ============================================
+
+-- Drop existing policies to allow re-runs
+drop policy if exists "Teachers can manage their own classes" on classes;
+drop policy if exists "Students can view classes they are enrolled in" on classes;
+drop policy if exists "Teachers can manage enrollments for their classes" on class_enrollments;
+drop policy if exists "Students can view their own enrollments" on class_enrollments;
+drop policy if exists "Parents can manage their own links" on parent_students;
+drop policy if exists "Students can see who is linked to them" on parent_students;
+drop policy if exists "Questions are viewable by everyone" on questions;
+
+-- Classes policies
+create policy "Teachers can manage their own classes"
+  on classes for all
+  using (auth.uid() = teacher_id);
+
+create policy "Students can view classes they are enrolled in"
+  on classes for select
+  using (
+    exists (
+      select 1 from class_enrollments
+      where class_enrollments.class_id = classes.id
+        and class_enrollments.student_id = auth.uid()
+    )
+  );
+
+-- Class Enrollments policies
+create policy "Teachers can manage enrollments for their classes"
+  on class_enrollments for all
+  using (
+    exists (
+      select 1 from classes
+      where classes.id = class_enrollments.class_id
+        and classes.teacher_id = auth.uid()
+    )
+  );
+
+create policy "Students can view their own enrollments"
+  on class_enrollments for select
+  using (auth.uid() = student_id);
+
+-- Parent-Student policies
+create policy "Parents can manage their own links"
+  on parent_students for all
+  using (auth.uid() = parent_id);
+
+create policy "Students can see who is linked to them"
+  on parent_students for select
+  using (auth.uid() = student_id);
+
+-- Questions policies
 create policy "Questions are viewable by everyone"
   on questions for select
   using (true);

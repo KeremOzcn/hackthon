@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
+import { supabase } from '@/lib/supabase'
 
-type ClassDetail = {
+interface ClassDetail {
   id: string
   name: string
   grade: string
@@ -16,7 +17,7 @@ type ClassDetail = {
   averageAccuracy: number
 }
 
-type StudentItem = {
+interface StudentItem {
   id: string
   name: string
   twinType: string
@@ -25,33 +26,6 @@ type StudentItem = {
 }
 
 type RiskLevel = 'low' | 'medium' | 'high'
-
-const CLASS_FIXTURES: Record<string, { detail: ClassDetail; students: StudentItem[] }> = {
-  '9a': {
-    detail: { id: '9a', name: '9-A', grade: '9. Sınıf', advisor: 'Ayşe Öğretmen', studentCount: 28, focus: 'Temel problem çözme', riskLevel: 'medium', averageAccuracy: 71 },
-    students: [
-      { id: 's1', name: 'Deniz K.', twinType: 'Konuyu Biliyor ama Modelleyemiyor', riskLevel: 'medium', accuracy: 40 },
-      { id: 's2', name: 'Elif S.', twinType: 'Hızlı ama Dikkatsiz', riskLevel: 'high', accuracy: 60 },
-      { id: 's3', name: 'Ayşe T.', twinType: 'Yavaş ama Sağlam', riskLevel: 'low', accuracy: 92 },
-    ],
-  },
-  '10b': {
-    detail: { id: '10b', name: '10-B', grade: '10. Sınıf', advisor: 'Mert Öğretmen', studentCount: 31, focus: 'Sınav panik yönetimi', riskLevel: 'high', averageAccuracy: 64 },
-    students: [
-      { id: 's4', name: 'Can Ö.', twinType: 'Sınav Panikçisi', riskLevel: 'medium', accuracy: 58 },
-      { id: 's5', name: 'Mert A.', twinType: 'İpucu Bağımlısı', riskLevel: 'high', accuracy: 62 },
-      { id: 's6', name: 'Zeynep Y.', twinType: 'Yavaş ama Sağlam', riskLevel: 'low', accuracy: 88 },
-    ],
-  },
-  '11c': {
-    detail: { id: '11c', name: '11-C', grade: '11. Sınıf', advisor: 'Elif Öğretmen', studentCount: 24, focus: 'Hız ve doğruluk dengesi', riskLevel: 'low', averageAccuracy: 83 },
-    students: [
-      { id: 's7', name: 'Bora D.', twinType: 'Yavaş ama Sağlam', riskLevel: 'low', accuracy: 90 },
-      { id: 's8', name: 'Sude A.', twinType: 'Hızlı ama Dikkatsiz', riskLevel: 'medium', accuracy: 76 },
-      { id: 's9', name: 'Ege M.', twinType: 'Konuyu Biliyor ama Modelleyemiyor', riskLevel: 'low', accuracy: 82 },
-    ],
-  },
-}
 
 const RISK_LABEL: Record<RiskLevel, string> = {
   low: 'Düşük',
@@ -90,22 +64,97 @@ export default function TeacherClassDetailPage() {
   const params = useParams<{ classId: string }>()
   const router = useRouter()
   const classId = Array.isArray(params.classId) ? params.classId[0] : params.classId
-  const data = CLASS_FIXTURES[classId]
+  const [detail, setDetail] = useState<ClassDetail | null>(null)
+  const [students, setStudents] = useState<StudentItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setIsLoading(false), 450)
-    return () => window.clearTimeout(timer)
+    async function load() {
+      if (!classId) { setIsLoading(false); return }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setIsLoading(false); return }
+
+      // Fetch class detail
+      const { data: classRow } = await supabase
+        .from('classes')
+        .select('id, name, grade, focus, created_at')
+        .eq('id', classId)
+        .eq('teacher_id', user.id)
+        .single()
+
+      if (!classRow) { setIsLoading(false); return }
+
+      // Fetch enrolled students with their latest results
+      const { data: enrollments } = await supabase
+        .from('class_enrollments')
+        .select('student_id, profiles(id, full_name)')
+        .eq('class_id', classId)
+
+      const studentIds = (enrollments ?? []).map(e => e.student_id)
+
+      // Fetch latest results for these students
+      const { data: results } = await supabase
+        .from('learning_twin_results')
+        .select('student_id, accuracy, twin_type, risk_level')
+        .in('student_id', studentIds)
+        .order('created_at', { ascending: false })
+
+      const latestMap = new Map<string, { accuracy: number; twinType: string; riskLevel: string }>()
+      for (const r of (results ?? [])) {
+        if (!latestMap.has(r.student_id)) {
+          latestMap.set(r.student_id, {
+            accuracy: r.accuracy ?? 0,
+            twinType: r.twin_type ?? 'Bilinmiyor',
+            riskLevel: r.risk_level ?? 'low',
+          })
+        }
+      }
+
+      const studentItems: StudentItem[] = (enrollments ?? []).map(e => {
+        const profile = (e as any).profiles
+        const latest = latestMap.get(e.student_id)
+        return {
+          id: e.student_id,
+          name: profile?.full_name ?? 'Öğrenci',
+          twinType: latest?.twinType ?? 'Henüz analiz yok',
+          riskLevel: (latest?.riskLevel as RiskLevel) ?? 'low',
+          accuracy: latest?.accuracy ?? 0,
+        }
+      })
+
+      // Compute class-level risk from students
+      const hasHigh = studentItems.some(s => s.riskLevel === 'high')
+      const hasMedium = studentItems.some(s => s.riskLevel === 'medium')
+      const classRisk: RiskLevel = hasHigh ? 'high' : hasMedium ? 'medium' : 'low'
+      const avgAcc = studentItems.length
+        ? Math.round(studentItems.reduce((sum, s) => sum + s.accuracy, 0) / studentItems.length)
+        : 0
+
+      setDetail({
+        id: classRow.id,
+        name: classRow.name,
+        grade: classRow.grade ?? '',
+        advisor: user.email?.split('@')[0] ?? 'Öğretmen',
+        studentCount: studentItems.length,
+        focus: classRow.focus ?? '',
+        riskLevel: classRisk,
+        averageAccuracy: avgAcc,
+      })
+      setStudents(studentItems)
+      setIsLoading(false)
+    }
+    load()
   }, [classId])
 
   const summary = useMemo(() => {
-    if (!data) {
-      return null
+    if (students.length === 0) {
+      return { highRiskStudents: 0, averageAccuracy: 0, distribution: { low: 0, medium: 0, high: 0 } }
     }
 
-    const highRiskStudents = data.students.filter(item => item.riskLevel === 'high').length
-    const averageAccuracy = Math.round(data.students.reduce((sum, item) => sum + item.accuracy, 0) / data.students.length)
-    const distribution = data.students.reduce<Record<RiskLevel, number>>(
+    const highRiskStudents = students.filter(item => item.riskLevel === 'high').length
+    const averageAccuracy = Math.round(students.reduce((sum, item) => sum + item.accuracy, 0) / students.length)
+    const distribution = students.reduce<Record<RiskLevel, number>>(
       (acc, item) => {
         acc[item.riskLevel] += 1
         return acc
@@ -113,7 +162,7 @@ export default function TeacherClassDetailPage() {
       { low: 0, medium: 0, high: 0 },
     )
     return { highRiskStudents, averageAccuracy, distribution }
-  }, [data])
+  }, [students])
 
   if (isLoading) {
     return (
@@ -144,13 +193,13 @@ export default function TeacherClassDetailPage() {
     )
   }
 
-  if (!data) {
+  if (!detail) {
     return (
       <main className="min-h-screen px-4 py-10">
         <div className="mx-auto w-full max-w-4xl">
-          <PageHeader title="Sınıf bulunamadı" subtitle="Bu sınıf için demo veri tanımlı değil." backHref="/teacher/class" backLabel="Sınıflara dön" />
+          <PageHeader title="Sınıf bulunamadı" subtitle="Bu sınıf erişilebilir değil." backHref="/teacher/class" backLabel="Sınıflara dön" />
           <div className="glass-card mt-6 p-6">
-            <p className="text-sm text-[var(--color-muted)]">Bu sayfa mock veriyle çalışıyor. Geçerli sınıflardan birini açmak için sınıf listesine dön.</p>
+            <p className="text-sm text-[var(--color-muted)]">Bu sınıf veritabanında bulunamadı veya erişim izniniz yok.</p>
             <button type="button" className="btn-primary mt-4" onClick={() => router.push('/teacher/class')}>
               Sınıf listesine git
             </button>
@@ -163,16 +212,16 @@ export default function TeacherClassDetailPage() {
   return (
     <main className="min-h-screen px-4 py-10">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <PageHeader title={`${data.detail.name} Detayı`} subtitle={`${data.detail.grade} • ${data.detail.advisor}`} backHref="/teacher/class" backLabel="Sınıf yönetimi" />
+        <PageHeader title={`${detail.name} Detayı`} subtitle={`${detail.grade} • ${detail.advisor}`} backHref="/teacher/class" backLabel="Sınıf yönetimi" />
 
         <section className="grid gap-4 md:grid-cols-4">
           <div className="glass-card p-5">
             <div className="text-sm text-[var(--color-muted)]">Öğrenci</div>
-            <div className="mt-2 text-3xl font-bold">{data.detail.studentCount}</div>
+            <div className="mt-2 text-3xl font-bold">{detail.studentCount}</div>
           </div>
           <div className="glass-card p-5">
             <div className="text-sm text-[var(--color-muted)]">Ortalama doğruluk</div>
-            <div className="mt-2 text-3xl font-bold">%{summary?.averageAccuracy ?? data.detail.averageAccuracy}</div>
+            <div className="mt-2 text-3xl font-bold">%{summary?.averageAccuracy ?? detail.averageAccuracy}</div>
           </div>
           <div className="glass-card p-5">
             <div className="text-sm text-[var(--color-muted)]">Yüksek risk</div>
@@ -181,7 +230,7 @@ export default function TeacherClassDetailPage() {
           <div className="glass-card p-5">
             <div className="text-sm text-[var(--color-muted)]">Sınıf risk seviyesi</div>
             <div className="mt-2">
-              <span className={`badge ${RISK_CLASS[data.detail.riskLevel]}`}>{RISK_LABEL[data.detail.riskLevel]}</span>
+              <span className={`badge ${RISK_CLASS[detail.riskLevel]}`}>{RISK_LABEL[detail.riskLevel]}</span>
             </div>
           </div>
         </section>
@@ -192,13 +241,13 @@ export default function TeacherClassDetailPage() {
             <div className="mt-4 flex flex-col gap-4 text-sm leading-6 text-[var(--color-muted)]">
               <div>
                 <div className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">Odak alanı</div>
-                <div className="mt-1 text-[var(--color-text)]">{data.detail.focus}</div>
+                <div className="mt-1 text-[var(--color-text)]">{detail.focus}</div>
               </div>
 
               <div>
                 <div className="text-xs uppercase tracking-[0.18em] text-[var(--color-muted)]">Durum yorumu</div>
                 <div className="mt-1 text-[var(--color-text)]">
-                  Bu sınıfta genel risk seviyesi {RISK_LABEL[data.detail.riskLevel].toLowerCase()} ve ortalama doğruluk %{summary?.averageAccuracy ?? data.detail.averageAccuracy}.
+                  Bu sınıfta genel risk seviyesi {RISK_LABEL[detail.riskLevel].toLowerCase()} ve ortalama doğruluk %{summary?.averageAccuracy ?? detail.averageAccuracy}.
                 </div>
               </div>
 
@@ -225,7 +274,7 @@ export default function TeacherClassDetailPage() {
             <p className="mt-1 text-sm text-[var(--color-muted)]">Her öğrenci için twin tipi, doğruluk ve risk seviyesi.</p>
 
             <div className="mt-4 flex flex-col gap-3">
-              {data.students.map(student => (
+              {students.map(student => (
                 <article key={student.id} className="rounded-2xl border border-[var(--border-subtle)] bg-white/[0.03] p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -249,7 +298,7 @@ export default function TeacherClassDetailPage() {
           <p className="mt-1 text-sm text-[var(--color-muted)]">Sınıfın risk seviyesine göre öğretmen için hızlı aksiyon planı.</p>
 
           <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {ACTION_PLAYBOOK[data.detail.riskLevel].map(action => (
+            {ACTION_PLAYBOOK[detail.riskLevel].map(action => (
               <article key={action.title} className="rounded-2xl border border-[var(--border-subtle)] bg-white/[0.03] p-4">
                 <div className="text-sm font-semibold">{action.title}</div>
                 <p className="mt-2 text-sm leading-6 text-[var(--color-muted)]">{action.body}</p>

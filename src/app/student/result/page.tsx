@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
+import { createClient } from '@/lib/supabase-client'
 import type { Achievement, LearningTwinResult, TwinType } from '@/types'
 import { generateStudentPDF } from '@/lib/pdf'
 
@@ -25,21 +26,9 @@ const TWIN_COLORS: Record<TwinType, string> = {
 
 const RISK_LABEL: Record<string, string> = { low: 'Düşük Risk', medium: 'Orta Risk', high: 'Yüksek Risk' }
 
-const MOCK_RESULT: LearningTwinResult = {
-  twinType: 'Konuyu Biliyor ama Modelleyemiyor',
-  dominantPattern: 'Problem metnini matematiksel denkleme dönüştürmede güçlük çekiyor; kavramsal anlayış var ama modelleme becerisi eksik.',
-  cognitiveIssue: 'Problem durumunu soyutlayarak matematiksel modele çevirme güçlüğü.',
-  behavioralIssue: 'Uzun sorularda ilk adımı atmakta tereddüt ediyor, ipucu olmadan başlayamıyor.',
-  riskLevel: 'medium',
-  nextBestAction: 'Değişken seçimi egzersizleri yaptırın. "Dinamik Temelleri" mini kursunu bu hafta sonu tamamlamasını sağlayın. Zamanlı testlerle süre yönetimini geliştirin.',
-  studentMessage: 'Konuları anlıyorsun ama soruları denkleme çevirirken takılıyorsun. Bu çok yaygın bir durum! Kısa modelleme egzersizleriyle bu beceriyi hızla geliştirebilirsin.',
-  teacherAction: 'Değişken seçimi ve denklem kurma odaklı 10 dakikalık günlük mini alıştırmalar ekleyin. İpucu vermeden önce "ne arıyoruz?" sorusunu sormaya teşvik edin.',
-  parentMessage: 'Ali düzenli çalışıyor ancak uzun problem sorularında ilk adımı kurmakta zorlanıyor. Daha fazla soru çözmek yerine kısa soru anlama egzersizleri daha etkili olacaktır.',
-  stats: { accuracy: 40, avgTimeSeconds: 58, hintsUsed: 3, highConfidenceWrong: 1 },
-}
-
 export default function ResultPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [result, setResult] = useState<LearningTwinResult | { error: true } | null>(null)
   const [studentName, setStudentName] = useState('Öğrenci')
   const [isPdfLoading, setIsPdfLoading] = useState(false)
@@ -72,13 +61,19 @@ export default function ResultPage() {
   }
 
   useEffect(() => {
-    const raw = safeParse<LearningTwinResult | { error?: boolean }>(localStorage.getItem('learntwin_result'))
-    if (raw && 'error' in raw) setResult({ error: true })
-    else if (raw) setResult(raw as LearningTwinResult)
-    else setResult(MOCK_RESULT)
-    const st = safeParse<{ name?: string }>(localStorage.getItem('learntwin_student'))
-    if (st?.name) setStudentName(st.name)
-  }, [])
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const name = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'Öğrenci'
+        setStudentName(name)
+      }
+      const raw = safeParse<LearningTwinResult | { error?: boolean }>(localStorage.getItem('learntwin_result'))
+      if (raw && 'error' in raw) setResult({ error: true })
+      else if (raw) setResult(raw as LearningTwinResult)
+      else setResult(null)
+    }
+    load()
+  }, [supabase])
 
   if (!result) {
     return (

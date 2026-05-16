@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase-client'
 import { questions } from '@/lib/questions'
 import { questionsScience } from '@/lib/questions-science'
 import { questionsTurkish } from '@/lib/questions-turkish'
@@ -23,6 +24,8 @@ const STEP_LABELS = ['Yanıtlar işlendi', 'Eksik kazanımlar belirlendi', 'Öğ
 
 export default function SessionPage() {
   const router = useRouter()
+  const supabase = createClient()
+  const [user, setUser] = useState<{ id: string; email?: string; name?: string } | null>(null)
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [confidence, setConfidence] = useState<ConfidenceLevel | null>(null)
@@ -44,6 +47,16 @@ export default function SessionPage() {
   }
 
   useEffect(() => {
+    async function loadUser() {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (!authUser) { router.push('/auth/login'); return }
+      const name = authUser.user_metadata?.full_name as string || authUser.email?.split('@')[0] || 'Öğrenci'
+      setUser({ id: authUser.id, email: authUser.email, name })
+    }
+    loadUser()
+  }, [router, supabase])
+
+  useEffect(() => {
     const parsed = safeParse<{ subject?: string; topic?: string }>(localStorage.getItem('learntwin_subject'))
     if (parsed?.subject && parsed?.topic) setSubjectMeta({ subject: parsed.subject, topic: parsed.topic })
   }, [])
@@ -51,11 +64,10 @@ export default function SessionPage() {
   useEffect(() => {
     let cancelled = false
     async function loadAdaptive() {
+      if (!user) return
       setIsLoadingQuestions(true)
-      const studentRaw = localStorage.getItem('learntwin_student')
-      const student = studentRaw ? JSON.parse(studentRaw) : { id: 'demo', name: 'Öğrenci' }
       try {
-        const res = await fetch(`/api/questions?studentId=${encodeURIComponent(student.id)}&subject=${encodeURIComponent(subjectMeta.subject)}`)
+        const res = await fetch(`/api/questions?studentId=${encodeURIComponent(user.id)}&subject=${encodeURIComponent(subjectMeta.subject)}`)
         if (!res.ok) throw new Error('Adaptive load failed')
         const data = await res.json()
         if (!cancelled) setQuestionSet(data.questions ?? [])
@@ -67,7 +79,7 @@ export default function SessionPage() {
     }
     loadAdaptive()
     return () => { cancelled = true }
-  }, [subjectMeta.subject])
+  }, [subjectMeta.subject, user])
 
   const question = questionSet[currentIdx]
   const progress = questionSet.length > 0 ? ((currentIdx + (submitted ? 1 : 0)) / questionSet.length) * 100 : 0
@@ -90,6 +102,7 @@ export default function SessionPage() {
   }
 
   async function handleNext() {
+    if (!user) return
     const timeSpent = Math.round((Date.now() - startTime) / 1000)
     const answer: Answer = {
       questionId: question.id,
@@ -112,7 +125,7 @@ export default function SessionPage() {
     } else {
       setIsAnalyzing(true)
       const stepInterval = setInterval(() => setAnalyzeStep(s => Math.min(s + 1, STEP_LABELS.length - 1)), 1200)
-      const student = safeParse<{ id?: string; name?: string }>(localStorage.getItem('learntwin_student')) ?? { id: 'demo', name: 'Öğrenci' }
+      const student = { id: user.id, name: user.name }
       try {
         const classInfo = safeParse<{ id?: string; name?: string; grade?: string }>(localStorage.getItem('learntwin_class')) ?? undefined
         const res = await fetch('/api/analyze', {

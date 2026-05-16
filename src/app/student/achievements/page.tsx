@@ -5,25 +5,8 @@ import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis } from 'recharts'
+import { createClient } from '@/lib/supabase-client'
 import { ACHIEVEMENTS } from '@/lib/gamification'
-
-const EVOLUTION_DATA = [
-  { week: 'W1', xp: 420 },
-  { week: 'W2', xp: 680 },
-  { week: 'W3', xp: 540 },
-  { week: 'W4', xp: 890 },
-  { week: 'W5', xp: 720 },
-  { week: 'W6', xp: 1100 },
-  { week: 'W7', xp: 950 },
-  { week: 'W8', xp: 1350 },
-]
-
-const FALLBACK_XP_TOTAL = 10000
-const FALLBACK_XP_CURRENT = 8450
-const FALLBACK_LEVEL = 42
-const FALLBACK_STREAK = 14
-const FALLBACK_ACCURACY = 94
-const FALLBACK_VELOCITY = 1.2
 
 const BADGE_BG: string[] = [
   'rgba(167,139,250,0.15)',
@@ -49,11 +32,6 @@ interface Badge {
   desc: string
   bg: string
   locked: boolean
-}
-
-function safeParse<T>(value: string | null): T | null {
-  if (!value) return null
-  try { return JSON.parse(value) as T } catch { return null }
 }
 
 function computeStreak(sessions: Session[]): number {
@@ -87,45 +65,54 @@ function computeVelocity(sessions: Session[]): number {
   return current / previous
 }
 
+function buildEvolutionData(sessions: Session[]) {
+  if (sessions.length === 0) return []
+  const sorted = [...sessions].sort(
+    (a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime()
+  )
+  return sorted.slice(-8).map((s, i) => ({
+    week: `S${i + 1}`,
+    xp: s.achievements.reduce((sum, a) => sum + (a.xp ?? 0), 0) + s.accuracy * 10,
+  }))
+}
+
 export default function AchievementsPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [, setStudentName] = useState('Öğrenci')
   const [loading, setLoading] = useState(true)
   const [sessions, setSessions] = useState<Session[]>([])
 
   useEffect(() => {
-    const student = safeParse<{ id?: string; name?: string }>(localStorage.getItem('learntwin_student'))
-    if (!student?.id) { router.push('/'); return }
-    if (student.name) setStudentName(student.name)
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth/login'); return }
+      const name = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'Öğrenci'
+      setStudentName(name)
 
-    fetch(`/api/sessions/${student.id}`)
-      .then(res => res.json())
-      .then(data => {
-        const fetched: Session[] = data?.sessions ?? []
-        setSessions(fetched)
-      })
-      .catch(() => {
-        setSessions([])
-      })
-      .finally(() => setLoading(false))
-  }, [router])
+      fetch(`/api/sessions/${user.id}`)
+        .then(res => res.json())
+        .then(data => {
+          const fetched: Session[] = data?.sessions ?? []
+          setSessions(fetched)
+        })
+        .catch(() => {
+          setSessions([])
+        })
+        .finally(() => setLoading(false))
+    }
+    load()
+  }, [router, supabase])
 
-  const hasRealData = sessions.length > 0
-
-  const totalXP = hasRealData
-    ? sessions.reduce((sum, s) => sum + s.achievements.reduce((aSum, a) => aSum + (a.xp ?? 0), 0), 0)
-    : FALLBACK_XP_CURRENT
-
-  const level = hasRealData ? Math.floor(totalXP / 250) : FALLBACK_LEVEL
-  const streak = hasRealData ? computeStreak(sessions) : FALLBACK_STREAK
-  const accuracy = hasRealData
-    ? Math.round(sessions.reduce((sum, s) => sum + s.accuracy, 0) / sessions.length)
-    : FALLBACK_ACCURACY
-  const velocity = hasRealData ? computeVelocity(sessions) : FALLBACK_VELOCITY
-
-  const xpCurrent = hasRealData ? totalXP : FALLBACK_XP_CURRENT
-  const xpTotal = hasRealData ? (level + 1) * 250 : FALLBACK_XP_TOTAL
-  const xpPercent = Math.round((xpCurrent / xpTotal) * 100)
+  const totalXP = sessions.reduce((sum, s) => sum + s.achievements.reduce((aSum, a) => aSum + (a.xp ?? 0), 0), 0)
+  const level = Math.floor(totalXP / 250)
+  const streak = computeStreak(sessions)
+  const accuracy = sessions.length ? Math.round(sessions.reduce((sum, s) => sum + s.accuracy, 0) / sessions.length) : 0
+  const velocity = computeVelocity(sessions)
+  const xpCurrent = totalXP
+  const xpTotal = (level + 1) * 250
+  const xpPercent = xpTotal > 0 ? Math.round((xpCurrent / xpTotal) * 100) : 0
+  const evolutionData = buildEvolutionData(sessions)
 
   const earnedIds = new Set<string>()
   for (const s of sessions) {
@@ -187,8 +174,9 @@ export default function AchievementsPage() {
               </div>
 
               <div style={{ height: 160, marginTop: '24px', marginBottom: '20px' }}>
+                {evolutionData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={EVOLUTION_DATA} barSize={28}>
+                  <BarChart data={evolutionData} barSize={28}>
                     <XAxis dataKey="week" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontFamily: 'JetBrains Mono' }} />
                     <Tooltip
                       cursor={{ fill: 'rgba(255,255,255,0.04)' }}
@@ -200,6 +188,11 @@ export default function AchievementsPage() {
                     <Bar dataKey="xp" fill="#6366f1" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-muted)', fontSize: '13px' }}>
+                    Henüz veri yok
+                  </div>
+                )}
               </div>
 
               <div>
