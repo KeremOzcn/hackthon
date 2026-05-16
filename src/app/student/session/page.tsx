@@ -19,39 +19,36 @@ const CONFIDENCE_LABELS: Record<ConfidenceLevel, string> = {
   high: 'Eminim',
 }
 
+const STEP_LABELS = ['Yanıtlar işlendi', 'Eksik kazanımlar belirlendi', 'Öğrenme modeli eğitiliyor...']
+
 export default function SessionPage() {
   const router = useRouter()
   const [currentIdx, setCurrentIdx] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [confidence, setConfidence] = useState<ConfidenceLevel | null>(null)
   const [hintLevel, setHintLevel] = useState<HintLevel>(0)
-  const [reasoning, setReasoning] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [answers, setAnswers] = useState<Answer[]>([])
   const [startTime, setStartTime] = useState(Date.now())
   const [elapsed, setElapsed] = useState(0)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [subjectMeta, setSubjectMeta] = useState({ subject: 'Matematik', topic: 'Problemler' })
+  const [analyzeStep, setAnalyzeStep] = useState(0)
+  const [subjectMeta, setSubjectMeta] = useState({ subject: 'Matematik', topic: 'Sayılar' })
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   function safeParse<T>(value: string | null): T | null {
     if (!value) return null
-    try {
-      return JSON.parse(value) as T
-    } catch {
-      return null
-    }
+    try { return JSON.parse(value) as T } catch { return null }
   }
 
   useEffect(() => {
-    const raw = localStorage.getItem('learntwin_subject')
-    const parsed = safeParse<{ subject?: string; topic?: string }>(raw)
+    const parsed = safeParse<{ subject?: string; topic?: string }>(localStorage.getItem('learntwin_subject'))
     if (parsed?.subject && parsed?.topic) setSubjectMeta({ subject: parsed.subject, topic: parsed.topic })
   }, [])
 
   const questionSet = getQuestions(subjectMeta.subject)
   const question = questionSet[currentIdx]
-  const progress = (currentIdx / questionSet.length) * 100
+  const progress = ((currentIdx + (submitted ? 1 : 0)) / questionSet.length) * 100
 
   useEffect(() => {
     setStartTime(Date.now())
@@ -79,7 +76,7 @@ export default function SessionPage() {
       timeSpentSeconds: timeSpent,
       confidence: confidence!,
       hintLevelUsed: hintLevel,
-      studentReasoning: reasoning,
+      studentReasoning: '',
     }
     const newAnswers = [...answers, answer]
 
@@ -89,12 +86,11 @@ export default function SessionPage() {
       setSelectedAnswer(null)
       setConfidence(null)
       setHintLevel(0)
-      setReasoning('')
       setSubmitted(false)
     } else {
       setIsAnalyzing(true)
+      const stepInterval = setInterval(() => setAnalyzeStep(s => Math.min(s + 1, STEP_LABELS.length - 1)), 1200)
       const student = safeParse<{ id?: string; name?: string }>(localStorage.getItem('learntwin_student')) ?? { id: 'demo', name: 'Öğrenci' }
-
       try {
         const classInfo = safeParse<{ id?: string; name?: string; grade?: string }>(localStorage.getItem('learntwin_class')) ?? undefined
         const res = await fetch('/api/analyze', {
@@ -103,26 +99,42 @@ export default function SessionPage() {
           body: JSON.stringify({ student, subject: subjectMeta.subject, topic: subjectMeta.topic, answers: newAnswers, classInfo }),
         })
         const data = await res.json()
+        clearInterval(stepInterval)
         localStorage.setItem('learntwin_result', JSON.stringify(data))
         router.push('/student/result')
       } catch {
+        clearInterval(stepInterval)
         localStorage.setItem('learntwin_result', JSON.stringify({ error: true }))
         router.push('/student/result')
       }
     }
   }
 
+  const timerStr = `${Math.floor(elapsed / 60).toString().padStart(2, '0')}:${(elapsed % 60).toString().padStart(2, '0')}`
+
   if (isAnalyzing) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <div className="text-center flex flex-col items-center gap-6">
-          <div style={{ position: 'relative', width: '64px', height: '64px' }}>
-            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid rgba(99,102,241,0.2)' }} />
-            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '3px solid transparent', borderTopColor: '#6366f1', animation: 'spin 1s linear infinite' }} />
+      <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)' }}>
+        <div className="glass-card" style={{ padding: '48px 40px', width: '100%', maxWidth: '440px', textAlign: 'center' }}>
+          {/* Spinner */}
+          <div style={{ position: 'relative', width: '72px', height: '72px', margin: '0 auto 32px' }}>
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid rgba(128,131,255,0.15)' }} />
+            <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px solid transparent', borderTopColor: 'var(--color-accent)', animation: 'spin 1s linear infinite' }} />
+            <div style={{ position: 'absolute', inset: '20px', borderRadius: '50%', background: 'rgba(128,131,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px' }}>🧠</div>
           </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '20px', marginBottom: '8px' }}>Learning Twin analizi yapılıyor...</div>
-            <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>Claude AI cevaplarını inceliyor</div>
+
+          <div style={{ fontWeight: 700, fontSize: '20px', marginBottom: '10px' }}>Learning Twin analizi yapılıyor...</div>
+          <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.7, marginBottom: '32px' }}>
+            Claude AI cevaplarını inceliyor ve kişiselleştirilmiş öğrenme haritası oluşturuyor.
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', textAlign: 'left' }}>
+            {STEP_LABELS.map((label, i) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: i <= analyzeStep ? 'var(--color-text)' : 'var(--color-muted)' }}>
+                <span style={{ fontSize: '16px' }}>{i < analyzeStep ? '✓' : i === analyzeStep ? '○' : '○'}</span>
+                <span style={{ color: i < analyzeStep ? 'var(--color-emerald)' : i === analyzeStep ? 'var(--color-text)' : 'var(--color-muted)' }}>{label}</span>
+              </div>
+            ))}
           </div>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -131,80 +143,112 @@ export default function SessionPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center px-4 py-10">
-      <div className="w-full max-w-2xl flex flex-col gap-6">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => router.push('/')} style={{ color: 'var(--color-muted)', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer' }}>
-            ← Çıkış
-          </button>
-          <div style={{ fontSize: '13px', color: 'var(--color-muted)', fontWeight: 600 }}>{currentIdx + 1} / {questionSet.length}</div>
-          <div style={{ fontSize: '13px', color: 'var(--color-muted)', fontFamily: 'monospace' }}>
-            {Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}
-          </div>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-primary)' }}>
+      {/* Session Header */}
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', height: '52px', borderBottom: '1px solid var(--border-subtle)' }}>
+        <button
+          onClick={() => router.push('/')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '18px', display: 'flex', alignItems: 'center', padding: '8px' }}
+          aria-label="Çıkış"
+        >
+          ✕
+        </button>
+        <div style={{ fontWeight: 800, fontSize: '16px', fontFamily: 'var(--font-hanken)', letterSpacing: '-0.02em' }}>
+          İşler LearnTwin AI
         </div>
-
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress}%` }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '6px 12px', fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+          ⏱ {timerStr}
         </div>
+      </header>
 
-        <div className="glass-card fade-in" style={{ padding: '28px' }} key={currentIdx}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>
-              {question.topic}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 20px 48px' }}>
+        <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* Progress row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
+              SORU {currentIdx + 1} / {questionSet.length}
             </span>
-            <span style={{
-              background: question.difficulty === 'easy' ? 'rgba(16,185,129,0.12)' : question.difficulty === 'medium' ? 'rgba(245,158,11,0.12)' : 'rgba(244,63,94,0.12)',
-              color: question.difficulty === 'easy' ? '#10b981' : question.difficulty === 'medium' ? '#f59e0b' : '#f43f5e',
-              padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 600,
-            }}>
-              {question.difficulty === 'easy' ? 'Kolay' : question.difficulty === 'medium' ? 'Orta' : 'Zor'}
+            <span style={{ fontSize: '12px', color: 'var(--color-muted)', background: 'rgba(255,255,255,0.06)', padding: '3px 10px', borderRadius: '999px' }}>
+              {subjectMeta.subject} • {subjectMeta.topic}
             </span>
           </div>
-
-          <p style={{ fontSize: '17px', lineHeight: 1.7, marginBottom: '20px', fontWeight: 500 }}>{question.questionText}</p>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-            {(Object.entries(question.options) as [string, string][]).map(([key, val]) => {
-              let cls = 'option-btn'
-              if (submitted) {
-                if (key === question.correctAnswer) cls += ' correct'
-                else if (key === selectedAnswer) cls += ' wrong'
-              } else if (key === selectedAnswer) {
-                cls += ' selected'
-              }
-              return (
-                <button key={key} className={cls} onClick={() => !submitted && setSelectedAnswer(key)} disabled={submitted}>
-                  <span style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, flexShrink: 0 }}>
-                    {key}
-                  </span>
-                  {val}
-                </button>
-              )
-            })}
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${progress}%` }} />
           </div>
 
-          {hintLevel > 0 && (
-            <div style={{ marginBottom: '16px' }}>
-              {Array.from({ length: hintLevel }).map((_, i) => (
-                <div key={i} style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '10px', padding: '12px 14px', marginBottom: '8px', fontSize: '14px', lineHeight: 1.5 }}>
-                  <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '12px' }}>İpucu {i + 1} </span>
-                  {question.hints[i]}
-                </div>
-              ))}
+          {/* Question Card */}
+          <div className="glass-card fade-in" style={{ padding: '28px' }} key={currentIdx}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
+              <span style={{ background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+                {question.topic}
+              </span>
+              <span style={{
+                padding: '3px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, fontFamily: 'var(--font-mono)',
+                background: question.difficulty === 'easy' ? 'rgba(16,185,129,0.12)' : question.difficulty === 'medium' ? 'rgba(245,158,11,0.12)' : 'rgba(244,63,94,0.12)',
+                color: question.difficulty === 'easy' ? '#10b981' : question.difficulty === 'medium' ? '#f59e0b' : '#f43f5e',
+              }}>
+                {question.difficulty === 'easy' ? 'KOLAY' : question.difficulty === 'medium' ? 'ORTA' : 'ZOR'}
+              </span>
             </div>
-          )}
 
-          {!submitted && hintLevel < 4 && (
-            <button className="btn-outline" onClick={handleHint} style={{ fontSize: '13px', padding: '8px 16px', marginBottom: '16px' }}>
-              💡 İpucu Al ({hintLevel}/4)
-            </button>
-          )}
-        </div>
+            <p style={{ fontSize: '17px', lineHeight: 1.7, marginBottom: '24px', fontWeight: 500 }}>{question.questionText}</p>
 
-        {!submitted && (
-          <div className="glass-card" style={{ padding: '20px' }}>
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '8px' }}>Cevabından ne kadar eminsin?</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+              {(Object.entries(question.options) as [string, string][]).map(([key, val]) => {
+                let cls = 'option-btn'
+                if (submitted) {
+                  if (key === question.correctAnswer) cls += ' correct'
+                  else if (key === selectedAnswer) cls += ' wrong'
+                } else if (key === selectedAnswer) {
+                  cls += ' selected'
+                }
+                return (
+                  <button key={key} className={cls} onClick={() => !submitted && setSelectedAnswer(key)} disabled={submitted}>
+                    <span style={{
+                      width: '28px', height: '28px', borderRadius: '7px',
+                      background: key === selectedAnswer && !submitted ? 'rgba(128,131,255,0.2)' : 'rgba(255,255,255,0.06)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '12px', fontWeight: 700, flexShrink: 0,
+                      color: key === selectedAnswer && !submitted ? 'var(--color-accent)' : 'var(--color-muted)',
+                    }}>
+                      {key}
+                    </span>
+                    {val}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Hints */}
+            {hintLevel > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                {Array.from({ length: hintLevel }).map((_, i) => (
+                  <div key={i} style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', lineHeight: 1.6 }}>
+                    <span style={{ color: '#f59e0b', fontWeight: 600, fontSize: '11px', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>İPUCU {i + 1} </span>
+                    {question.hints[i]}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Hint link */}
+            {!submitted && hintLevel < 4 && (
+              <button
+                onClick={handleHint}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0 }}
+              >
+                <span>📍</span> İpucu İste
+              </button>
+            )}
+          </div>
+
+          {/* Confidence Card */}
+          {!submitted && (
+            <div className="glass-card" style={{ padding: '20px' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.07em', marginBottom: '12px', fontFamily: 'var(--font-mono)' }}>
+                BU CEVAPTAN NE KADAR EMİNSİN?
+              </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {(['low', 'medium', 'high'] as ConfidenceLevel[]).map(c => (
                   <button key={c} className={`confidence-btn${confidence === c ? ` active-${c}` : ''}`} onClick={() => setConfidence(c)}>
@@ -213,32 +257,24 @@ export default function SessionPage() {
                 ))}
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '8px' }}>
-                Bu soruyu çözerken ne düşündün? <span style={{ fontWeight: 400 }}>(isteğe bağlı)</span>
-              </div>
-              <textarea
-                value={reasoning}
-                onChange={e => setReasoning(e.target.value)}
-                placeholder="Kısa bir açıklama yaz..."
-                rows={2}
-                style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.04)', color: 'var(--color-text)', fontSize: '14px', outline: 'none', resize: 'none' }}
-              />
-            </div>
-          </div>
-        )}
+          )}
 
-        <button
-          className="btn-primary"
-          onClick={submitted ? handleNext : handleSubmit}
-          disabled={!submitted && (!selectedAnswer || !confidence)}
-          style={{ justifyContent: 'center', fontSize: '16px', padding: '14px', opacity: (!submitted && (!selectedAnswer || !confidence)) ? 0.5 : 1 }}
-        >
-          {submitted
-            ? (currentIdx < questionSet.length - 1 ? 'Sonraki Soru →' : 'Analizi Gör →')
-            : 'Cevapla'}
-        </button>
-      </div>
-    </main>
+          {/* Action Button */}
+          <button
+            className="btn-primary"
+            onClick={submitted ? handleNext : handleSubmit}
+            disabled={!submitted && (!selectedAnswer || !confidence)}
+            style={{
+              justifyContent: 'center', fontSize: '15px', padding: '14px',
+              opacity: (!submitted && (!selectedAnswer || !confidence)) ? 0.45 : 1,
+            }}
+          >
+            {submitted
+              ? (currentIdx < questionSet.length - 1 ? 'Sonraki Soru →' : 'Analizi Gör →')
+              : 'Cevapla'}
+          </button>
+        </div>
+      </main>
+    </div>
   )
 }
