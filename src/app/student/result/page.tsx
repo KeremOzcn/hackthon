@@ -4,6 +4,14 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { LearningTwinResult, TwinType } from '@/types'
 
+interface Badge {
+  id: string
+  label: string
+  emoji: string
+  description: string
+  earned: boolean
+}
+
 const TWIN_ICONS: Record<TwinType, string> = {
   'Hızlı ama Dikkatsiz': '⚡',
   'Yavaş ama Sağlam': '🐢',
@@ -25,6 +33,7 @@ const RISK_LABEL: Record<string, string> = { low: 'Düşük Risk', medium: 'Orta
 export default function ResultPage() {
   const router = useRouter()
   const [result, setResult] = useState<LearningTwinResult | { error: true } | null>(null)
+  const [achievements, setAchievements] = useState<Badge[]>([])
   const [studentName, setStudentName] = useState('Öğrenci')
   const [tab, setTab] = useState<'student' | 'teacher' | 'parent'>('student')
 
@@ -38,11 +47,14 @@ export default function ResultPage() {
   }
 
   useEffect(() => {
-    const raw = safeParse<LearningTwinResult | { error?: boolean }>(localStorage.getItem('learntwin_result'))
+    const raw = safeParse<LearningTwinResult | { error?: boolean; achievements?: Badge[] }>(localStorage.getItem('learntwin_result'))
     if (raw && 'error' in raw) {
       setResult({ error: true })
     } else if (raw) {
       setResult(raw as LearningTwinResult)
+      if ('achievements' in raw && Array.isArray(raw.achievements)) {
+        setAchievements(raw.achievements)
+      }
     }
     const st = safeParse<{ name?: string }>(localStorage.getItem('learntwin_student'))
     if (st?.name) setStudentName(st.name)
@@ -159,6 +171,49 @@ export default function ResultPage() {
             </>
           )}
         </div>
+
+        {/* Rozetler */}
+        {achievements.length > 0 && (
+          <div className="glass-card fade-in" style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+              <span style={{ fontSize: '16px' }}>🏅</span>
+              <span style={{ fontWeight: 700, fontSize: '14px' }}>Kazanılan Rozetler</span>
+              <span style={{
+                background: 'rgba(99,102,241,0.2)', color: '#a5b4fc',
+                fontSize: '11px', fontWeight: 700, padding: '2px 8px',
+                borderRadius: '999px', marginLeft: 'auto',
+              }}>
+                {achievements.filter(b => b.earned).length} / {achievements.length}
+              </span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+              {achievements.map(badge => (
+                <div
+                  key={badge.id}
+                  style={{
+                    padding: '12px 14px', borderRadius: '12px',
+                    border: badge.earned ? '1px solid rgba(99,102,241,0.3)' : '1px solid var(--border-subtle)',
+                    background: badge.earned ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.02)',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    opacity: badge.earned ? 1 : 0.4,
+                    transition: 'all 200ms ease',
+                  }}
+                >
+                  <span style={{ fontSize: '22px', flexShrink: 0 }}>{badge.emoji}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '13px', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {badge.label}
+                      {badge.earned && <span style={{ fontSize: '10px' }}>✨</span>}
+                    </div>
+                    <div style={{ color: 'var(--color-muted)', fontSize: '11px', lineHeight: 1.4 }}>
+                      {badge.description}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="btn-outline" onClick={() => router.push('/student/history')} style={{ flex: 1, justifyContent: 'center' }}>Geçmişim</button>

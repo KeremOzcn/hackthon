@@ -31,3 +31,16 @@ export function SkeletonCard({ lines = 3 }: { lines?: number }) {
     </div>
   )
 }
+
+export function SkeletonRow() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px', borderBottom: '1px solid var(--border-subtle)' }}>
+      <Skeleton width="38px" height="38px" borderRadius="50%" style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <Skeleton height="13px" width="45%" />
+        <Skeleton height="11px" width="28%" />
+      </div>
+      <Skeleton width="44px" height="22px" borderRadius="6px" />
+    </div>
+  )
+}

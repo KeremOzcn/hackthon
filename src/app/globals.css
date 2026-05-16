@@ -1,16 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0b1120;
-  --bg-card: rgba(255, 255, 255, 0.04);
-  --bg-card-hover: rgba(255, 255, 255, 0.07);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --color-accent: #6366f1;
+  --bg-primary: #0B1120;
+  --bg-card: #141A29;
+  --bg-card-hover: #192033;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-highlight: rgba(255, 255, 255, 0.12);
+  
+  --color-accent: #8083ff;
+  --color-accent-dim: rgba(128, 131, 255, 0.1);
   --color-amber: #f59e0b;
   --color-emerald: #10b981;
   --color-rose: #f43f5e;
-  --color-text: #f1f5f9;
-  --color-muted: #94a3b8;
+  
+  --color-text: #F8FAFC;
+  --color-muted: #94A3B8;
+  
   --duration-fast: 150ms;
   --duration-normal: 300ms;
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -21,120 +26,88 @@
 body {
   background-color: var(--bg-primary);
   color: var(--color-text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-hanken), sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Common Components */
+
 .glass-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  backdrop-filter: blur(12px);
-  transition: background var(--duration-fast) ease;
+  border-radius: 12px;
+  transition: all var(--duration-fast) ease;
 }
-.glass-card:hover { background: var(--bg-card-hover); }
 
 .btn-primary {
-  background: var(--color-accent);
-  color: white;
-  padding: 12px 28px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 15px;
+  background: linear-gradient(180deg, #9FA2FF 0%, #8083ff 100%);
+  color: #1000a9;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
   border: none;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 14px rgba(128,131,255,0.25);
   cursor: pointer;
   transition: opacity var(--duration-fast) ease, transform var(--duration-fast) ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
-.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:hover { opacity: 0.95; transform: translateY(-1px); }
 .btn-primary:active { transform: translateY(0); }
 
+/* Button Secondary/Outline */
 .btn-outline {
   background: transparent;
   color: var(--color-text);
-  padding: 12px 28px;
-  border-radius: 12px;
+  padding: 10px 20px;
+  border-radius: 8px;
   font-weight: 500;
-  font-size: 15px;
+  font-size: 14px;
   border: 1px solid var(--border-subtle);
   cursor: pointer;
   transition: background var(--duration-fast) ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
-.btn-outline:hover { background: var(--bg-card-hover); }
+.btn-outline:hover { background: var(--bg-card-hover); border-color: var(--border-highlight); }
 
+/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-.badge-low  { background: rgba(16,185,129,.15); color: #10b981; border: 1px solid rgba(16,185,129,.3); }
-.badge-medium { background: rgba(245,158,11,.15); color: #f59e0b; border: 1px solid rgba(245,158,11,.3); }
-.badge-high { background: rgba(244,63,94,.15);  color: #f43f5e; border: 1px solid rgba(244,63,94,.3); }
-
-.option-btn {
-  width: 100%;
-  text-align: left;
-  padding: 14px 18px;
-  border-radius: 12px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-card);
-  color: var(--color-text);
-  cursor: pointer;
-  transition: all var(--duration-fast) ease;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 15px;
-}
-.option-btn:hover { border-color: var(--color-accent); background: rgba(99,102,241,.08); }
-.option-btn.selected { border-color: var(--color-accent); background: rgba(99,102,241,.15); }
-.option-btn.correct  { border-color: var(--color-emerald); background: rgba(16,185,129,.15); }
-.option-btn.wrong    { border-color: var(--color-rose); background: rgba(244,63,94,.12); }
-
-.confidence-btn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border-subtle);
-  background: var(--bg-card);
-  color: var(--color-muted);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
-  text-align: center;
-  transition: all var(--duration-fast) ease;
-}
-.confidence-btn:hover { color: var(--color-text); }
-.confidence-btn.active-low    { border-color: var(--color-rose);    background: rgba(244,63,94,.12);  color: var(--color-rose); }
-.confidence-btn.active-medium { border-color: var(--color-amber);   background: rgba(245,158,11,.12); color: var(--color-amber); }
-.confidence-btn.active-high   { border-color: var(--color-emerald); background: rgba(16,185,129,.12); color: var(--color-emerald); }
-
-.progress-bar { height: 4px; background: var(--border-subtle); border-radius: 999px; overflow: hidden; }
-.progress-fill {
-  height: 100%;
-  background: var(--color-accent);
-  border-radius: 999px;
-  transition: width var(--duration-normal) var(--ease-out-expo);
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
+.badge-low  { background: rgba(16,185,129,0.1); color: #10b981; }
+.badge-low::before { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: #10b981; }
+
+.badge-medium { background: rgba(245,158,11,0.1); color: #f59e0b; }
+.badge-medium::before { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: #f59e0b; }
+
+.badge-high { background: rgba(244,63,94,0.1); color: #f43f5e; }
+.badge-high::before { content: ''; display: block; width: 5px; height: 5px; border-radius: 50%; background: #f43f5e; }
+
+/* Utilities */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeIn var(--duration-normal) var(--ease-out-expo) forwards; }
-
-@keyframes skeleton-shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}

@@ -104,7 +104,7 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
       hints_used: stats.hintsUsed,
       raw_answers: answers,
       created_at: new Date().toISOString(),
-    }).then(() => {})
+    }).then(() => { })
 
     return NextResponse.json(result)
   } catch (err) {
