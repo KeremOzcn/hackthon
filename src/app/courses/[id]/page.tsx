@@ -7,79 +7,61 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
 
-const CLASS_META: Record<string, { name: string; subject: string; students: number; color: string }> = {
-  '1': { name: '12-A Matematik', subject: 'ADVANCED MATHEMATICS', students: 28, color: '#6366f1' },
-  '2': { name: '11-B Matematik',  subject: 'CALCULUS I',           students: 32, color: '#10b981' },
-  '3': { name: '10-C Tarih',      subject: 'WORLD HISTORY',        students: 24, color: '#f59e0b' },
+const COURSE_META: Record<string, { name: string; subject: string; topics: string[]; color: string }> = {
+  matematik: {
+    name: 'Matematik',
+    subject: 'ADVANCED MATHEMATICS',
+    topics: ['Turev', 'Integral', 'Trigonometri', 'Logaritma', 'Diziler', 'Limitler', 'Olasilik'],
+    color: '#8083ff',
+  },
+  'fen-bilimleri': {
+    name: 'Fen Bilimleri',
+    subject: 'SCIENCE',
+    topics: ['Fizik', 'Kimya', 'Biyoloji', 'Astronomi', 'Jeoloji'],
+    color: '#10b981',
+  },
+  turkce: {
+    name: 'Turkce',
+    subject: 'TURKISH LANGUAGE',
+    topics: ['Dil Bilgisi', 'Paragraf', 'Siir', 'Anlatim Bozuklugu', 'Yazi Turleri'],
+    color: '#f59e0b',
+  },
 }
 
-const PERF_DATA = [
-  { topic: 'Türev',     avg: 54 },
-  { topic: 'İntegral',  avg: 48 },
-  { topic: 'Trigon',    avg: 83 },
-  { topic: 'Logaritma', avg: 61 },
-  { topic: 'Diziler',   avg: 44 },
-  { topic: 'Limitler',  avg: 52 },
-  { topic: 'Olasılık',  avg: 58 },
-]
-const CLASS_AVG = Math.round(PERF_DATA.reduce((s, d) => s + d.avg, 0) / PERF_DATA.length)
-
-const AI_INSIGHTS = [
-  {
-    tag: 'MASTER BECERİ',
-    tagColor: '#6366f1',
-    icon: '🏆',
-    text: "Sınıfın %45'i 'Belirli İntegral'de Alana Hesap' konusunda yapısal hata paternleri gösteriyor.",
-  },
-  {
-    tag: 'GÜÇLÜ YÖN',
-    tagColor: '#10b981',
-    icon: '💡',
-    text: "'Trigonometrik Denklemler' işlem hızı sınıf genelinde hedeflenen sürenin %15 altında.",
-  },
-  {
-    tag: 'ÖNERİ',
-    tagColor: '#f59e0b',
-    icon: '🎯',
-    text: 'İntegral konusundaki eksiği kapatmak için seviye 2 mini-test alınması tavsiye edilir.',
-  },
-]
-
-type TwinBadge = { label: string; color: string }
-
-interface Student {
-  id: string
-  num: number
-  initials: string
-  name: string
-  twin: TwinBadge
-  score: number
-  lastActive: string
+const PERF_DATA: Record<string, { topic: string; avg: number }[]> = {
+  matematik: [
+    { topic: 'Turev', avg: 54 },
+    { topic: 'Integral', avg: 48 },
+    { topic: 'Trigonometri', avg: 83 },
+    { topic: 'Logaritma', avg: 61 },
+    { topic: 'Diziler', avg: 44 },
+    { topic: 'Limitler', avg: 52 },
+    { topic: 'Olasilik', avg: 58 },
+  ],
+  'fen-bilimleri': [
+    { topic: 'Fizik', avg: 62 },
+    { topic: 'Kimya', avg: 55 },
+    { topic: 'Biyoloji', avg: 71 },
+    { topic: 'Astronomi', avg: 45 },
+    { topic: 'Jeoloji', avg: 50 },
+  ],
+  turkce: [
+    { topic: 'Dil Bilgisi', avg: 68 },
+    { topic: 'Paragraf', avg: 72 },
+    { topic: 'Siir', avg: 55 },
+    { topic: 'Anlatim Bozuklugu', avg: 60 },
+    { topic: 'Yazi Turleri', avg: 48 },
+  ],
 }
 
-const STUDENTS: Student[] = [
-  { id: 'a', num: 44, initials: 'AY', name: 'Ahmet Yılmaz',  twin: { label: 'GÜÇLÜ İNTEGRAL',    color: '#10b981' }, score: 92, lastActive: '2 saat önce' },
-  { id: 'b', num: 28, initials: 'ZK', name: 'Zeynep Kaya',   twin: { label: 'KONUYU KAVRAYAMAYAN', color: '#f43f5e' }, score: 54, lastActive: '1 gün önce'  },
-  { id: 'c', num: 38, initials: 'CD', name: 'Can Demir',     twin: { label: 'DETAYLI',             color: '#a78bfa' }, score: 76, lastActive: '5 saat önce' },
-]
-
-function ScoreBar({ value, color }: { value: number; color: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-      <div style={{ width: '80px', height: '6px', borderRadius: '3px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-        <div style={{ width: `${value}%`, height: '100%', background: color, borderRadius: '3px', transition: 'width 600ms ease' }} />
-      </div>
-      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700 }}>{value}</span>
-    </div>
-  )
-}
-
-export default function ClassDetailPage() {
+export default function CourseDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const id = (params?.id as string) ?? '1'
-  const cls = CLASS_META[id] ?? CLASS_META['1']
-  const maxAvg = Math.max(...PERF_DATA.map(d => d.avg))
+  const id = (params?.id as string) ?? 'matematik'
+  const course = COURSE_META[id] ?? COURSE_META['matematik']
+  const perfData = PERF_DATA[id] ?? PERF_DATA['matematik']
+  const classAvg = Math.round(perfData.reduce((s, d) => s + d.avg, 0) / perfData.length)
+  const maxAvg = Math.max(...perfData.map(d => d.avg))
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -90,169 +72,183 @@ export default function ClassDetailPage() {
 
           {/* Breadcrumb */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>
-            <span style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => router.push('/teacher')}>LER</span>
-            <span style={{ opacity: 0.4 }}>•</span>
-            <span style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => router.push('/courses')}>SINIF</span>
-            <span style={{ opacity: 0.4 }}>•</span>
-            <span style={{ color: 'var(--color-text)' }}>{cls.students} ÖĞRENCİ</span>
+            <span style={{ cursor: 'pointer', opacity: 0.6 }} onClick={() => router.push('/courses')}>DERSLER</span>
+            <span style={{ opacity: 0.4 }}>/</span>
+            <span style={{ color: 'var(--color-text)', textTransform: 'uppercase' }}>{course.subject}</span>
           </div>
 
           {/* Page header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '8px' }}>
-                {cls.name}
+                {course.name}
               </h1>
               <p style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.6, maxWidth: '480px' }}>
-                Detaylı sınıf performansı ve yapay zeka destekli bilişsel öğrenme kalıpları analizi.
+                Ders icerigi ve ogrenci performans ozetleri.
               </p>
             </div>
             <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-              <button className="btn-outline" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                ↓ Raporu İndir
-              </button>
-              <button className="btn-primary" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                + Toplu Görev Ata
+              <button className="btn-ghost" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                ← Derslere Don
               </button>
             </div>
           </div>
 
-          {/* Performance + AI Analysis */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '16px' }}>
+          {/* Konu listesi + Performans chart */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '16px' }}>
 
-            {/* Performance chart */}
+            {/* Konu listesi */}
             <div className="glass-card" style={{ padding: '28px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                <div style={{ fontWeight: 700, fontSize: '17px' }}>Performans Dağılımı</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--color-muted)' }}>
-                  <span style={{ width: '10px', height: '2px', background: '#f59e0b', display: 'inline-block', borderRadius: '1px' }} />
-                  Sınıf Ort. {CLASS_AVG}%
-                </div>
+              <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '20px' }}>Konu Listesi</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {course.topics.map((topic, i) => {
+                  const perf = perfData.find(p => p.topic === topic)
+                  const avg = perf?.avg ?? 0
+                  return (
+                    <div
+                      key={topic}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '14px 16px',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '0.5px solid rgba(255,255,255,0.06)',
+                        transition: 'background 150ms ease, border-color 150ms ease',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'
+                      }}
+                    >
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '50%',
+                        background: `${course.color}18`,
+                        border: `1px solid ${course.color}30`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: course.color,
+                        flexShrink: 0,
+                      }}>
+                        {i + 1}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: '14px' }}>{topic}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '60px', height: '4px', borderRadius: '999px', background: 'var(--surface-mid)', overflow: 'hidden' }}>
+                          <div style={{ width: `${avg}%`, height: '100%', borderRadius: '999px', background: avg >= 70 ? '#10b981' : avg >= 50 ? '#f59e0b' : '#f43f5e' }} />
+                        </div>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--color-muted)', minWidth: '28px', textAlign: 'right' }}>
+                          {avg}%
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '20px' }}>Son 4 haftalık deneme sınav ortalamaları</div>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={PERF_DATA} barCategoryGap="30%">
-                  <XAxis dataKey="topic" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10, fontFamily: 'JetBrains Mono' }} />
-                  <YAxis hide domain={[0, 100]} />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                    contentStyle={{ background: '#141A29', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', fontSize: '12px' }}
-                    labelStyle={{ color: 'rgba(255,255,255,0.5)' }}
-                    itemStyle={{ color: '#e2e8f0' }}
-                    formatter={(v) => [`${v}%`, 'Ortalama']}
-                  />
-                  <ReferenceLine y={CLASS_AVG} stroke="#f59e0b" strokeDasharray="4 4" strokeOpacity={0.6} />
-                  <Bar dataKey="avg" radius={[4, 4, 0, 0]}>
-                    {PERF_DATA.map((entry) => (
-                      <Cell
-                        key={entry.topic}
-                        fill={entry.avg === maxAvg ? cls.color : 'rgba(255,255,255,0.08)'}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
             </div>
 
             {/* AI Analysis */}
             <div className="glass-card" style={{ padding: '28px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                <span style={{ fontSize: '18px' }}>✦</span>
-                <div style={{ fontWeight: 700, fontSize: '17px' }}>Yapay Zeka Analizi</div>
+                <span style={{ fontSize: '14px', color: 'var(--color-accent)', fontWeight: 700 }}>AI</span>
+                <div style={{ fontWeight: 700, fontSize: '17px' }}>Performans Ozeti</div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {AI_INSIGHTS.map((ins) => (
-                  <div key={ins.tag} style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontSize: '9px', fontWeight: 700, color: ins.tagColor, letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: `${ins.tagColor}18` }}>
-                        {ins.tag}
-                      </span>
-                      <span style={{ fontSize: '14px', opacity: 0.7 }}>{ins.icon}</span>
-                    </div>
-                    <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>{ins.text}</p>
+                <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#10b981', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16,185,129,0.12)' }}>
+                      GUCLU ALAN
+                    </span>
                   </div>
-                ))}
+                  <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>
+                    Sinifin en yuksek performans gosterdigi konu: <strong style={{ color: 'var(--color-text)' }}>{perfData.reduce((a, b) => a.avg > b.avg ? a : b).topic}</strong> (%{maxAvg})
+                  </p>
+                </div>
+
+                <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: 'rgba(245,158,11,0.12)' }}>
+                      ODAK GEREKEN
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>
+                    Sinif ortalamasinin altinda kalan konu: <strong style={{ color: 'var(--color-text)' }}>{perfData.reduce((a, b) => a.avg < b.avg ? a : b).topic}</strong> (%{perfData.reduce((a, b) => a.avg < b.avg ? a : b).avg}) ek calisma gerektiriyor.
+                  </p>
+                </div>
+
+                <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '9px', fontWeight: 700, color: '#8083ff', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: 'rgba(128,131,255,0.12)' }}>
+                      ONERI
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>
+                    Dusuk performansli konularda mini testler ve tekrar videolari atanmasi tavsiye edilir.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Student List */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
-              <div>
-                <h2 style={{ fontWeight: 700, fontSize: '20px', marginBottom: '4px' }}>Öğrenci Listesi</h2>
-                <p style={{ color: 'var(--color-muted)', fontSize: '13px' }}>Sınıftaki öğrencilerin bilişsel analizleri ve durumları.</p>
+          {/* Performance chart */}
+          <div className="glass-card" style={{ padding: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ fontWeight: 700, fontSize: '17px' }}>Konu Performans Dagilimi</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--color-muted)' }}>
+                <span style={{ width: '10px', height: '2px', background: '#f59e0b', display: 'inline-block', borderRadius: '1px' }} />
+                Sinif Ort. {classAvg}%
               </div>
-              <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.04)', color: 'var(--color-muted)', fontSize: '13px', cursor: 'pointer', fontWeight: 500 }}>
-                Tüm Öğrenciler <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
-              </button>
             </div>
-
-            <div className="glass-card" style={{ overflow: 'hidden' }}>
-              {/* Table header */}
-              <div style={{ display: 'grid', gridTemplateColumns: '32px 48px 1fr 200px 140px 120px', borderBottom: '1px solid var(--border-subtle)', padding: '0 4px' }}>
-                <div style={{ padding: '12px 8px', display: 'flex', alignItems: 'center' }}>
-                  <input type="checkbox" style={{ accentColor: cls.color, cursor: 'pointer' }} readOnly />
-                </div>
-                <div />
-                {['ÖĞRENCİ ADI', 'İKİZİ', 'EN YAKIN KONUSU', 'SON ETKİNLİK'].map(h => (
-                  <div key={h} style={{ padding: '12px 16px', fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>{h}</div>
-                ))}
-              </div>
-
-              {STUDENTS.map((s, i) => (
-                <div
-                  key={s.id}
-                  style={{
-                    display: 'grid', gridTemplateColumns: '32px 48px 1fr 200px 140px 120px',
-                    borderBottom: i < STUDENTS.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                    transition: 'background 150ms ease', padding: '0 4px',
+            <div style={{ fontSize: '11px', color: 'var(--color-muted)', marginBottom: '20px' }}>Son 4 haftalik deneme sinav ortalamalari</div>
+            <ResponsiveContainer width="100%" height={240}>
+              <BarChart data={perfData} barCategoryGap="30%">
+                <XAxis
+                  dataKey="topic"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#94a3b8', fontSize: 10, fontFamily: 'JetBrains Mono' }}
+                />
+                <YAxis hide domain={[0, 100]} />
+                <Tooltip
+                  cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+                  contentStyle={{
+                    background: 'rgba(12,19,36,0.9)',
+                    border: '0.5px solid rgba(255,255,255,0.1)',
+                    borderRadius: '8px',
+                    backdropFilter: 'blur(24px)',
+                    WebkitBackdropFilter: 'blur(24px)',
+                    color: '#dce1fb',
+                    fontSize: '12px',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.3), 0 10px 15px rgba(0,0,0,0.2)',
                   }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <div style={{ padding: '16px 8px', display: 'flex', alignItems: 'center' }}>
-                    <input type="checkbox" style={{ accentColor: cls.color, cursor: 'pointer' }} readOnly />
-                  </div>
-                  <div style={{ padding: '16px 4px', display: 'flex', alignItems: 'center' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: `${cls.color}18`, border: `1px solid ${cls.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: cls.color }}>
-                      {s.initials}
-                    </div>
-                  </div>
-                  <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: '14px' }}>{s.name}</div>
-                      <div style={{ fontSize: '11px', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>#{s.num}</div>
-                    </div>
-                  </div>
-                  <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center' }}>
-                    <span style={{
-                      padding: '4px 10px', borderRadius: '6px', fontSize: '10px', fontWeight: 700,
-                      fontFamily: 'var(--font-mono)', letterSpacing: '0.04em',
-                      background: `${s.twin.color}18`, color: s.twin.color,
-                    }}>
-                      {s.twin.label}
-                    </span>
-                  </div>
-                  <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center' }}>
-                    <ScoreBar value={s.score} color={s.score >= 70 ? '#10b981' : s.score >= 50 ? '#f59e0b' : '#f43f5e'} />
-                  </div>
-                  <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', fontSize: '12px', color: 'var(--color-muted)' }}>
-                    {s.lastActive}
-                  </div>
-                </div>
-              ))}
-
-              <div style={{ padding: '14px 20px', borderTop: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '13px', color: 'var(--color-muted)' }}>1-3 / 32 Gösteriliyor</span>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  {['←', '→'].map(arrow => (
-                    <button key={arrow} style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.04)', color: 'var(--color-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>{arrow}</button>
+                  labelStyle={{ color: '#94a3b8' }}
+                  itemStyle={{ color: '#dce1fb' }}
+                  formatter={(v) => [`${v}%`, 'Ortalama']}
+                />
+                <ReferenceLine y={classAvg} stroke="#f59e0b" strokeDasharray="4 4" strokeOpacity={0.6} />
+                <Bar dataKey="avg" radius={[4, 4, 0, 0]}>
+                  {perfData.map((entry) => (
+                    <Cell
+                      key={entry.topic}
+                      fill={entry.avg === maxAvg ? course.color : 'rgba(255,255,255,0.08)'}
+                    />
                   ))}
-                </div>
-              </div>
-            </div>
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
 
         </div>

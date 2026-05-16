@@ -6,7 +6,7 @@ import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
 import { supabase } from '@/lib/supabase'
 import { generateStudentPDF } from '@/lib/pdf'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Area } from 'recharts'
 import type { LearningTwinResult, TwinType, RiskLevel } from '@/types'
 
 interface ParentData {
@@ -17,6 +17,9 @@ interface ParentData {
   next_best_action: string
   risk_level: string
   created_at: string
+  subject: string
+  topic: string
+  dominant_pattern: string
 }
 
 const MOCK_DATA: ParentData = {
@@ -27,12 +30,15 @@ const MOCK_DATA: ParentData = {
   next_best_action: 'Fizik temel tekrar: Sisteme Ali\'ye özel olarak atanan "Dinamik Temelleri" mini kursunu bu hafta sonu tamamlamasını sağlayın. Zaman yönetimi: Deneme sınavlarında süre yetiştirme konusunda pratik yapması için sisteme eklenen zamanlı testleri kullanmasını hatırlatın. Motivasyon: Matematik dersindeki başarısını takdir ederek bu motivasyonu diğer derslere aktarmasına yardımcı olun.',
   risk_level: 'medium',
   created_at: new Date().toISOString(),
+  subject: 'Matematik',
+  topic: 'İntegral',
+  dominant_pattern: 'Konuyu Biliyor ama Modelleyemiyor',
 }
 
 function toLearningTwinResult(d: ParentData): LearningTwinResult {
   return {
     twinType: d.twin_type as TwinType,
-    dominantPattern: d.twin_type,
+    dominantPattern: d.dominant_pattern || d.twin_type,
     cognitiveIssue: '',
     behavioralIssue: '',
     riskLevel: d.risk_level as RiskLevel,
@@ -67,7 +73,7 @@ export default function ParentPage() {
     async function load() {
       const { data: rows } = await supabase
         .from('learning_twin_results')
-        .select('student_name,twin_type,accuracy,parent_message,next_best_action,risk_level,created_at')
+        .select('student_name, twin_type, risk_level, accuracy, parent_message, next_best_action, subject, topic, created_at, dominant_pattern')
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -120,6 +126,29 @@ export default function ParentPage() {
       }))
   }, [sessions])
 
+  const subjectStats = useMemo(() => {
+    const map = new Map<string, { accuracy: number; count: number; latest: number; trend: 'up' | 'down' | 'stable' }>()
+    const studentSessions = currentStudent ? (grouped.get(currentStudent) ?? []) : []
+    // Group by subject
+    for (const row of studentSessions) {
+      if (!row.subject) continue
+      if (!map.has(row.subject)) {
+        map.set(row.subject, { accuracy: 0, count: 0, latest: row.accuracy, trend: 'stable' })
+      }
+      const current = map.get(row.subject)!
+      current.accuracy += row.accuracy
+      current.count += 1
+    }
+    const result = Array.from(map.entries()).map(([subject, stats]) => {
+      const avg = Math.round(stats.accuracy / stats.count)
+      return { subject, accuracy: avg, trend: avg >= 60 ? 'up' as const : 'down' as const }
+    })
+    return result.length > 0 ? result : [
+      { subject: 'Matematik', accuracy: d.accuracy, trend: 'up' as const },
+      { subject: 'Fen Bilimleri', accuracy: Math.max(0, d.accuracy - 12), trend: 'down' as const },
+    ]
+  }, [sessions, currentStudent, grouped, d])
+
   async function handleDownloadPDF() {
     if (!d) return
     const result = toLearningTwinResult(d)
@@ -168,25 +197,26 @@ export default function ParentPage() {
                         <button
                           key={name}
                           onClick={() => setSelectedStudent(name)}
+                          className="glass-card"
                           style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '12px',
                             padding: '12px 16px',
                             borderRadius: '12px',
-                            border: isActive ? '1px solid var(--color-accent)' : '1px solid var(--border-subtle)',
-                            background: isActive ? 'rgba(128,131,255,0.10)' : 'rgba(255,255,255,0.03)',
                             cursor: 'pointer',
                             flexShrink: 0,
                             minWidth: '180px',
                             transition: 'all 0.2s ease',
+                            borderColor: isActive ? 'var(--color-accent)' : undefined,
+                            background: isActive ? 'rgba(128,131,255,0.10)' : undefined,
                           }}
                         >
                           <div style={{
                             width: '44px',
                             height: '44px',
                             borderRadius: '50%',
-                            background: isActive ? 'linear-gradient(135deg, #6366f1, #a78bfa)' : 'linear-gradient(135deg, #475569, #64748b)',
+                            background: isActive ? 'linear-gradient(135deg, #8083ff, #a78bfa)' : 'linear-gradient(135deg, #475569, #64748b)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -208,21 +238,9 @@ export default function ParentPage() {
                 </div>
               )}
 
-              {/* PDF Download */}
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={handleDownloadPDF}
-                  className="btn-primary"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-                >
-                  <span>📄</span>
-                  PDF Raporu Al
-                </button>
-              </div>
-
               {/* Student profile card */}
               <div className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '18px' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, #6366f1, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '20px', color: '#fff', flexShrink: 0 }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'linear-gradient(135deg, #8083ff, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '20px', color: '#fff', flexShrink: 0 }}>
                   {initials}
                 </div>
                 <div style={{ flex: 1 }}>
@@ -244,18 +262,24 @@ export default function ParentPage() {
                   <div style={{ height: '220px' }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                        <defs>
+                          <linearGradient id="parentTrendFill" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgba(128,131,255,0.2)" />
+                            <stop offset="100%" stopColor="rgba(128,131,255,0)" />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                         <XAxis
                           dataKey="date"
-                          stroke="var(--color-muted)"
-                          fontSize={12}
+                          stroke="rgba(255,255,255,0.1)"
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
                           tickLine={false}
                           axisLine={false}
                           dy={10}
                         />
                         <YAxis
-                          stroke="var(--color-muted)"
-                          fontSize={12}
+                          stroke="rgba(255,255,255,0.1)"
+                          tick={{ fill: '#94a3b8', fontSize: 12 }}
                           tickLine={false}
                           axisLine={false}
                           domain={[0, 100]}
@@ -263,20 +287,26 @@ export default function ParentPage() {
                         />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'var(--bg-secondary)',
-                            border: '1px solid var(--border-subtle)',
+                            background: 'rgba(12,19,36,0.9)',
+                            border: '0.5px solid rgba(255,255,255,0.1)',
                             borderRadius: '8px',
-                            color: 'var(--color-text)',
+                            backdropFilter: 'blur(24px)',
+                            WebkitBackdropFilter: 'blur(24px)',
+                            color: '#dce1fb',
+                            fontSize: '12px',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.3), 0 10px 15px rgba(0,0,0,0.2)',
                           }}
-                          itemStyle={{ fontWeight: 600, color: 'var(--color-accent)' }}
+                          itemStyle={{ fontWeight: 600, color: '#8083ff' }}
+                          labelStyle={{ color: '#94a3b8' }}
                         />
+                        <Area type="monotone" dataKey="accuracy" stroke="none" fill="url(#parentTrendFill)" />
                         <Line
                           type="monotone"
                           dataKey="accuracy"
-                          stroke="#6366f1"
+                          stroke="#8083ff"
                           strokeWidth={3}
-                          dot={{ fill: '#0b1120', stroke: '#6366f1', strokeWidth: 2, r: 4 }}
-                          activeDot={{ r: 6, fill: '#6366f1', stroke: '#fff' }}
+                          dot={{ fill: '#0c1324', stroke: '#8083ff', strokeWidth: 2, r: 4 }}
+                          activeDot={{ r: 6, fill: '#8083ff', stroke: '#fff' }}
                         />
                       </LineChart>
                     </ResponsiveContainer>
@@ -287,29 +317,25 @@ export default function ParentPage() {
               {/* Genel Performans */}
               <div>
                 <h2 style={{ fontWeight: 700, fontSize: '18px', marginBottom: '14px' }}>Genel Performans</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div className="glass-card" style={{ padding: '20px', borderTop: '2px solid #10b981' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 700, color: '#10b981', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>GÜÇLÜ ALAN</div>
-                    <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>Doğruluk: %{d.accuracy}</div>
-                    <p style={{ color: 'var(--color-muted)', fontSize: '13px', lineHeight: 1.6, marginBottom: '12px' }}>
-                      Son testlerde %{d.accuracy} başarı oranı ile sınıf ortalamasında performans gösteriyor. Pratik yapması çok iyi.
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '16px' }}>📈</span>
-                      <span style={{ fontSize: '12px', color: '#10b981', fontWeight: 600 }}>Devam etmesini sağlayın</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                  {subjectStats.map((stat) => (
+                    <div key={stat.subject} className="glass-card" style={{ padding: '20px', borderTop: `2px solid ${stat.trend === 'up' ? '#10b981' : '#f59e0b'}` }}>
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: stat.trend === 'up' ? '#10b981' : '#f59e0b', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '12px', textTransform: 'uppercase' }}>
+                        {stat.subject}
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: '22px', marginBottom: '8px', fontFamily: 'var(--font-hanken)' }}>
+                        %{stat.accuracy}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ flex: 1, height: '4px', borderRadius: '999px', background: 'var(--surface-mid)', overflow: 'hidden' }}>
+                          <div style={{ width: `${stat.accuracy}%`, height: '100%', borderRadius: '999px', background: stat.trend === 'up' ? '#10b981' : '#f59e0b', transition: 'width var(--duration-normal) cubic-bezier(0.4, 0, 0.2, 1)' }} />
+                        </div>
+                        <span style={{ fontSize: '12px', color: stat.trend === 'up' ? '#10b981' : '#f59e0b', fontWeight: 600 }}>
+                          {stat.trend === 'up' ? 'Yukari' : 'Dikkat'}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="glass-card" style={{ padding: '20px', borderTop: '2px solid #f59e0b' }}>
-                    <div style={{ fontSize: '10px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '12px' }}>ODAK GEREKEN</div>
-                    <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>{d.twin_type}</div>
-                    <p style={{ color: 'var(--color-muted)', fontSize: '13px', lineHeight: 1.6, marginBottom: '12px' }}>
-                      Temel kavramlarda eksikler gözlemleniyor. Test tamamlama süresi beklenenden uzun sürüyor.
-                    </p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '16px' }}>⚠️</span>
-                      <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 600 }}>Dikkat gerektiriyor</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
@@ -317,10 +343,10 @@ export default function ParentPage() {
               <div className="glass-card" style={{ padding: '28px' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px' }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '4px' }}>Ne Yapılmalı? (Yapay Zeka Önerisi)</div>
-                    <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Kişiselleştirilmiş aksiyon planı</div>
+                    <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '4px' }}>Ne Yapılmali? (Yapay Zeka Onerisi)</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Kisisellestirilmis aksiyon plani</div>
                   </div>
-                  <span style={{ fontSize: '22px' }}>🤖</span>
+                  <span style={{ fontSize: '22px', color: 'var(--color-accent)' }}>AI</span>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}>
@@ -334,13 +360,13 @@ export default function ParentPage() {
                   ))}
                 </div>
 
-                <button className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                  Detaylı Raporu İncele →
+                <button onClick={handleDownloadPDF} className="btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                  Detayli Raporu Incele
                 </button>
               </div>
 
               <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: '12px', lineHeight: 1.7 }}>
-                Bu rapor <strong style={{ color: 'var(--color-text)' }}>İşler LearnTwin AI</strong> tarafından {d.student_name}&apos;nin soru çözüm davranışından otomatik oluşturulmuştur.
+                Bu rapor <strong style={{ color: 'var(--color-text)' }}>İşler LearnTwin AI</strong> tarafindan {d.student_name}&apos;nin soru cozum davranisindan otomatik olusturulmustur.
               </p>
             </>
           )}
