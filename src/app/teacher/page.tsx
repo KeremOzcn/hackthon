@@ -171,10 +171,10 @@ export default function TeacherPage() {
               ← Geri
             </button>
             <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '10px' }}>
-              Cohort Overview
+              Sınıf Genel Bakışı
             </h1>
             <p style={{ color: 'var(--color-muted)', fontSize: '15px', lineHeight: 1.6, maxWidth: '520px' }}>
-              Monitor class performance, identify at-risk students, and deploy AI-suggested interventions.
+              Sınıf performansını izleyin, risk altındaki öğrencileri tespit edin ve yapay zeka önerili müdahaleleri uygulayın.
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
@@ -191,9 +191,9 @@ export default function TeacherPage() {
           {/* 3 KPI Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
             {[
-              { label: 'ACTION REQUIRED', icon: '⚠', value: highRisk, valueColor: '#f43f5e', desc: 'Students flagged as at-risk based on recent assessment data and engagement metrics.' },
-              { label: 'COHORT ENGAGEMENT', icon: '📊', value: `${avgAcc}%`, valueColor: '#10b981', desc: 'Average active participation rate across all current modules. +2% from last week.' },
-              { label: 'PENDING TASKS', icon: '📋', value: pendingTasks, valueColor: '#f59e0b', desc: 'AI-generated interventions waiting for your manual review and approval.' },
+              { label: 'MÜDAHALE GEREKEN', icon: '⚠', value: highRisk, valueColor: '#f43f5e', desc: 'Son değerlendirme verilerine ve katılım metriklerine göre riskli olarak işaretlenen öğrenciler.' },
+              { label: 'SINIF BAŞARISI', icon: '📊', value: `${avgAcc}%`, valueColor: '#10b981', desc: 'Tüm mevcut modüllerdeki ortalama aktif katılım oranı. Geçen haftaya göre +2%.' },
+              { label: 'BEKLEYEN GÖREVLER', icon: '📋', value: pendingTasks, valueColor: '#f59e0b', desc: 'Manuel inceleme ve onayınızı bekleyen yapay zeka üretimi müdahaleler.' },
             ].map(kpi => (
               <div key={kpi.label} className="glass-card" style={{ padding: '24px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
@@ -280,9 +280,9 @@ export default function TeacherPage() {
           {/* Attention Required */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h2 style={{ fontWeight: 700, fontSize: '20px' }}>Attention Required</h2>
+              <h2 style={{ fontWeight: 700, fontSize: '20px' }}>Dikkat Gereken</h2>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)', fontSize: '13px', fontWeight: 600 }}>
-                VIEW ALL →
+                TÜMÜNÜ GÖR →
               </button>
             </div>
 
@@ -313,24 +313,24 @@ export default function TeacherPage() {
                             </div>
                           </div>
                           <span className={`badge badge-${s.risk_level}`}>
-                            {s.risk_level === 'high' ? 'HIGH RISK' : 'MED RISK'}
+                            {s.risk_level === 'high' ? 'YÜKSEK RİSK' : 'ORTA RİSK'}
                           </span>
                         </div>
                       </div>
 
                       <div style={{ margin: '0 24px 20px', background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: '10px', padding: '16px' }}>
                         <div style={{ fontSize: '10px', fontWeight: 700, color: '#a5b4fc', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
-                          🤖 AI INTERVENTION SUGGESTION
+                          🤖 YAPAY ZEKA MÜDAHALE ÖNERİSİ
                         </div>
                         <p style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--color-muted)', marginBottom: '14px' }}>
                           {s.student_name} için öneri: {s.teacher_action}
                         </p>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                           <button className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
-                            APPROVE &amp; ASSIGN
+                            ONAYLA VE ATA
                           </button>
                           <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '12px', fontWeight: 600 }}>
-                            EDIT SUGGESTION
+                            ÖNERİYİ DÜZENLE
                           </button>
                         </div>
                       </div>

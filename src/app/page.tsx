@@ -22,12 +22,12 @@ interface RoleOption {
 }
 
 const ROLES: RoleOption[] = [
-  { id: 'student', title: 'Student', desc: 'Personalized learning paths and adaptive testing.', icon: '\u{1F393}' },
-  { id: 'teacher', title: 'Teacher', desc: 'Advanced analytics and automated curriculum generation.', icon: '\u{1F468}\u{200D}\u{1F3EB}' },
-  { id: 'parent', title: 'Parent', desc: 'Real-time progress tracking and performance insights.', icon: '\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}' },
+  { id: 'student', title: 'Öğrenci', desc: 'Kişiselleştirilmiş öğrenme yolları ve adaptif testler.', icon: '\u{1F393}' },
+  { id: 'teacher', title: 'Öğretmen', desc: 'Gelişmiş analitik ve otomatik müfredat oluşturma.', icon: '\u{1F468}\u{200D}\u{1F3EB}' },
+  { id: 'parent', title: 'Veli', desc: 'Gerçek zamanlı ilerleme takibi ve performans içgörüleri.', icon: '\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}' },
 ]
 
-const STEPS = ['Profile', 'Subject', 'Details']
+const STEPS = ['Profil', 'Ders', 'Detaylar']
 
 export default function LandingPage() {
   const router = useRouter()
@@ -106,7 +106,7 @@ export default function LandingPage() {
             fontFamily: 'var(--font-mono)',
           }}
         >
-          NEXT-GENERATION LEARNING
+          YENİ NESİL ÖĞRENME
         </div>
 
         {/* Hero */}
@@ -121,9 +121,9 @@ export default function LandingPage() {
             letterSpacing: '-0.03em',
           }}
         >
-          Precision Education,
+          Kesintisiz Eğitim,
           <br />
-          Powered <span style={{ color: 'var(--color-accent)' }}>by AI.</span>
+          Yapay Zeka <span style={{ color: 'var(--color-accent)' }}>ile.</span>
         </h1>
 
         <p
@@ -136,8 +136,7 @@ export default function LandingPage() {
             marginBottom: '56px',
           }}
         >
-          Accelerate learning outcomes with adaptive, data-driven intelligence. Choose your path
-          to begin the intelligent onboarding process.
+          Adaptif, veri odaklı zeka ile öğrenme sonuçlarını hızlandırın. Akıllı başvuru sürecini başlatmak için yolunuzu seçin.
         </p>
 
         {/* Role Cards */}
@@ -255,7 +254,7 @@ export default function LandingPage() {
               marginBottom: '6px',
             }}
           >
-            Select Primary Subject
+            Ana Ders Seçin
           </h2>
           <p
             style={{
@@ -264,7 +263,7 @@ export default function LandingPage() {
               marginBottom: '28px',
             }}
           >
-            Choose the focus area for the initial AI assessment.
+            İlk yapay zeka değerlendirmesi için odak alanı seçin.
           </p>
 
           {/* Subject Selector */}
@@ -354,14 +353,14 @@ export default function LandingPage() {
                 fontFamily: 'var(--font-mono)',
               }}
             >
-              FULL NAME
+              TAM İSİM
             </label>
             <input
               type="text"
               value={studentName}
               onChange={(e) => setStudentName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleContinue()}
-              placeholder="Enter your name"
+              placeholder="Adınızı girin"
               className="input-field"
               style={{
                 width: '100%',
@@ -387,7 +386,7 @@ export default function LandingPage() {
                 opacity: selectedRole === 'student' && !studentName.trim() ? 0.5 : 1,
               }}
             >
-              Continue Setup →
+              Devam Et →
             </button>
           </div>
         </div>

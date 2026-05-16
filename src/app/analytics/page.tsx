@@ -14,23 +14,23 @@ const TREND_DATA = [
 ]
 
 const ARCHETYPES = [
-  { label: 'Analytical',  value: 430, color: '#6366f1' },
-  { label: 'Creative',    value: 310, color: '#10b981' },
-  { label: 'Practical',   value: 250, color: '#f59e0b' },
-  { label: 'Theoretical', value: 198, color: '#a78bfa' },
+  { label: 'Analitik',  value: 430, color: '#6366f1' },
+  { label: 'Yaratıcı',    value: 310, color: '#10b981' },
+  { label: 'Pratik',   value: 250, color: '#f59e0b' },
+  { label: 'Teorik', value: 198, color: '#a78bfa' },
 ]
 
 const HEATMAP = [
-  { subject: 'Advanced Mathematics', s1: 12, s2: 15, s3: 45, s4: 28 },
-  { subject: 'Quantum Physics',      s1:  5, s2: 36, s3: 41, s4: 18 },
-  { subject: 'Organic Chemistry',    s1: 10, s2: 28, s3: 38, s4: 24 },
+  { subject: 'İleri Matematik', s1: 12, s2: 15, s3: 45, s4: 28 },
+  { subject: 'Kuantum Fiziği',      s1:  5, s2: 36, s3: 41, s4: 18 },
+  { subject: 'Organik Kimya',    s1: 10, s2: 28, s3: 38, s4: 24 },
 ]
 
 const KPIS = [
-  { label: 'TOTAL ACTIVE TESTS',    value: '12,450', sub: '+12.5% from last week', color: '#10b981', icon: '📋' },
-  { label: 'AVG. ENGAGEMENT SCORE', value: '86.4',   sub: '+3.1% from last week',  color: '#6366f1', icon: '📊', suffix: '/100' },
-  { label: 'AT-RISK STUDENTS',      value: '342',    sub: 'Requires attention',     color: '#f43f5e', icon: '⚠'  },
-  { label: 'AI INTERACTIONS',       value: '1.2M',   sub: 'Across all networks',    color: '#a78bfa', icon: '🤖' },
+  { label: 'AKTİF TOPLAM TESTLER',    value: '12.450', sub: 'Geçen haftaya göre +12,5%', color: '#10b981', icon: '📋' },
+  { label: 'ORT. KATILIM SKORU', value: '86,4',   sub: 'Geçen haftaya göre +3,1%',  color: '#6366f1', icon: '📊', suffix: '/100' },
+  { label: 'RİSK ALTINDAKİ ÖĞRENCİLER',      value: '342',    sub: 'Dikkat gerektiriyor',     color: '#f43f5e', icon: '⚠'  },
+  { label: 'YZ ETKİLEŞİMLERİ',       value: '1,2M',   sub: 'Tüm ağlar boyunca',    color: '#a78bfa', icon: '🤖' },
 ]
 
 function heatColor(v: number): { bg: string; color: string } {
@@ -53,14 +53,14 @@ export default function AnalyticsPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h1 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '8px' }}>
-                Advanced Analytics
+                Gelişmiş Analitik
               </h1>
               <p style={{ color: 'var(--color-muted)', fontSize: '15px', lineHeight: 1.6, maxWidth: '560px' }}>
-                Deep dive into twin behavior, performance trends, and risk distributions across all your subjects.
+                Tüm derslerinizdeki twin davranışı, performans trendleri ve risk dağılımlarına derinlemesine bakın.
               </p>
             </div>
             <button style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', borderRadius: '8px', border: '1px solid var(--border-subtle)', background: 'rgba(255,255,255,0.04)', color: 'var(--color-muted)', fontSize: '13px', cursor: 'pointer', fontWeight: 500, whiteSpace: 'nowrap' }}>
-              📅 Last 30 Days <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
+              📅 Son 30 Gün <span style={{ fontSize: '10px', opacity: 0.7 }}>▾</span>
             </button>
           </div>
 
@@ -86,13 +86,13 @@ export default function AnalyticsPage() {
 
             <div className="glass-card" style={{ padding: '28px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-                <div style={{ fontWeight: 700, fontSize: '17px' }}>Performance Trends</div>
+                <div style={{ fontWeight: 700, fontSize: '17px' }}>Performans Trendleri</div>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--color-muted)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '14px', height: '2px', background: '#6366f1', display: 'inline-block', borderRadius: '1px' }} /> Mathematics
+                    <span style={{ width: '14px', height: '2px', background: '#6366f1', display: 'inline-block', borderRadius: '1px' }} /> Matematik
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '14px', height: '2px', background: '#10b981', display: 'inline-block', borderRadius: '1px' }} /> Physics
+                    <span style={{ width: '14px', height: '2px', background: '#10b981', display: 'inline-block', borderRadius: '1px' }} /> Fizik
                   </span>
                 </div>
               </div>
@@ -113,8 +113,8 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="glass-card" style={{ padding: '28px' }}>
-              <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '4px' }}>Twin Archetypes</div>
-              <div style={{ color: 'var(--color-muted)', fontSize: '13px', marginBottom: '24px' }}>4 Core Types</div>
+              <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '4px' }}>Twin Arketipleri</div>
+              <div style={{ color: 'var(--color-muted)', fontSize: '13px', marginBottom: '24px' }}>4 Temel Tip</div>
 
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px' }}>
                 <div style={{ position: 'relative', width: '120px', height: '120px' }}>
@@ -140,7 +140,7 @@ export default function AnalyticsPage() {
                   </svg>
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                     <div style={{ fontWeight: 800, fontSize: '22px', lineHeight: 1 }}>4</div>
-                    <div style={{ fontSize: '10px', color: 'var(--color-muted)' }}>Types</div>
+                    <div style={{ fontSize: '10px', color: 'var(--color-muted)' }}>Tip</div>
                   </div>
                 </div>
               </div>
@@ -161,18 +161,18 @@ export default function AnalyticsPage() {
 
           {/* Risk Distribution Heatmap */}
           <div>
-            <h2 style={{ fontWeight: 700, fontSize: '20px', marginBottom: '16px' }}>Risk Distribution Heatmap</h2>
+            <h2 style={{ fontWeight: 700, fontSize: '20px', marginBottom: '16px' }}>Risk Dağılım Isı Haritası</h2>
             <div className="glass-card" style={{ overflow: 'hidden' }}>
               <div style={{ padding: '12px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', fontSize: '11px', color: 'var(--color-muted)' }}>
-                <span>Low Risk</span>
+                <span>Düşük Risk</span>
                 {['#10b981', '#f59e0b', '#f43f5e'].map((c) => (
                   <span key={c} style={{ width: '20px', height: '10px', background: c, opacity: 0.5, borderRadius: '2px', display: 'inline-block' }} />
                 ))}
-                <span>High Risk</span>
+                <span>Yüksek Risk</span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 130px 120px 110px 80px', borderBottom: '1px solid var(--border-subtle)' }}>
-                {['SUBJECT', 'S1 FOUNDATIONAL', 'S2 INTERMEDIATE', 'S3 ADVANCED', 'S4 EXPERT', 'ACTION'].map(h => (
+                {['DERS', 'S1 TEMEL', 'S2 ORTA', 'S3 İLERİ', 'S4 UZMAN', 'AKSİYON'].map(h => (
                   <div key={h} style={{ padding: '12px 16px', fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.05em' }}>{h}</div>
                 ))}
               </div>
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
                     )
                   })}
                   <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center' }}>
-                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)', fontSize: '12px', fontWeight: 600 }}>View →</button>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)', fontSize: '12px', fontWeight: 600 }}>Gör →</button>
                   </div>
                 </div>
               ))}

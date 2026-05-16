@@ -10,19 +10,19 @@ import {
 const COURSE_META: Record<string, { name: string; subject: string; topics: string[]; color: string }> = {
   matematik: {
     name: 'Matematik',
-    subject: 'ADVANCED MATHEMATICS',
+    subject: 'İLERİ MATEMATİK',
     topics: ['Turev', 'Integral', 'Trigonometri', 'Logaritma', 'Diziler', 'Limitler', 'Olasilik'],
     color: '#8083ff',
   },
   'fen-bilimleri': {
     name: 'Fen Bilimleri',
-    subject: 'SCIENCE',
+    subject: 'FEN BİLİMLERİ',
     topics: ['Fizik', 'Kimya', 'Biyoloji', 'Astronomi', 'Jeoloji'],
     color: '#10b981',
   },
   turkce: {
     name: 'Turkce',
-    subject: 'TURKISH LANGUAGE',
+    subject: 'TÜRKÇE',
     topics: ['Dil Bilgisi', 'Paragraf', 'Siir', 'Anlatim Bozuklugu', 'Yazi Turleri'],
     color: '#f59e0b',
   },
@@ -170,7 +170,7 @@ export default function CourseDetailPage() {
                 <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '9px', fontWeight: 700, color: '#10b981', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16,185,129,0.12)' }}>
-                      GUCLU ALAN
+                      GÜÇLÜ ALAN
                     </span>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>
@@ -181,7 +181,7 @@ export default function CourseDetailPage() {
                 <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '9px', fontWeight: 700, color: '#f59e0b', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: 'rgba(245,158,11,0.12)' }}>
-                      ODAK GEREKEN
+                      ODAKLANILMASI GEREKEN
                     </span>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>
@@ -192,7 +192,7 @@ export default function CourseDetailPage() {
                 <div style={{ padding: '14px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '9px', fontWeight: 700, color: '#8083ff', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', padding: '3px 8px', borderRadius: '4px', background: 'rgba(128,131,255,0.12)' }}>
-                      ONERI
+                      ÖNERİ
                     </span>
                   </div>
                   <p style={{ fontSize: '12px', color: 'var(--color-muted)', lineHeight: 1.6, margin: 0 }}>

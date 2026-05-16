@@ -161,13 +161,13 @@ export default function AchievementsPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
               <span style={{ fontSize: '14px' }}>🏆</span>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>ACHIEVEMENTS &amp; MILESTONES</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>BAŞARILAR VE DÖNÜM NOKTALARI</span>
             </div>
             <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '12px' }}>
               Öğrenci Rozetler
             </h1>
             <p style={{ color: 'var(--color-muted)', fontSize: '15px', lineHeight: 1.6, maxWidth: '560px' }}>
-              Track your learning evolution, analyze your streak patterns, and showcase your earned distinctions within the Twin ecosystem.
+              Öğrenme evrimini takip edin, seri desenlerinizi analiz edin ve Twin ekosisteminde kazandığınız rozetleri sergileyin.
             </p>
           </div>
 
@@ -178,11 +178,11 @@ export default function AchievementsPage() {
             <div className="glass-card" style={{ flex: 1, minWidth: '0', padding: '28px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '4px' }}>Twin Evolution</div>
-                  <div style={{ color: 'var(--color-muted)', fontSize: '13px' }}>Current Cognitive Level: Level {level}</div>
+                  <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '4px' }}>Twin Gelişimi</div>
+                  <div style={{ color: 'var(--color-muted)', fontSize: '13px' }}>Mevcut Bilişsel Seviye: Seviye {level}</div>
                 </div>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '5px 12px', borderRadius: '999px', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '12px', fontWeight: 700, color: '#f59e0b', flexShrink: 0 }}>
-                  🔥 {streak} DAY STREAK
+                  🔥 {streak} GÜNLÜK SERİ
                 </span>
               </div>
 
@@ -204,7 +204,7 @@ export default function AchievementsPage() {
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Progress to Level {level + 1}</span>
+                  <span style={{ fontSize: '12px', color: 'var(--color-muted)' }}>Seviye {level + 1} İlerlemesi</span>
                   <span style={{ fontSize: '12px', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>{xpCurrent.toLocaleString()} / {xpTotal.toLocaleString()} XP</span>
                 </div>
                 <div style={{ height: '6px', background: 'rgba(255,255,255,0.07)', borderRadius: '999px', overflow: 'hidden' }}>
@@ -220,7 +220,7 @@ export default function AchievementsPage() {
                   🎯
                 </div>
                 <div style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: '6px' }}>{accuracy}%</div>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>ACCURACY RATE</div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>DOĞRULUK ORANI</div>
               </div>
 
               <div className="glass-card" style={{ padding: '28px', textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -228,7 +228,7 @@ export default function AchievementsPage() {
                   ⚡
                 </div>
                 <div style={{ fontSize: '40px', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1, marginBottom: '6px' }}>{velocity.toFixed(1)}x</div>
-                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>LEARNING VELOCITY</div>
+                <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--color-muted)', letterSpacing: '0.08em', fontFamily: 'var(--font-mono)' }}>ÖĞRENME HIZI</div>
               </div>
             </div>
           </div>
@@ -236,9 +236,9 @@ export default function AchievementsPage() {
           {/* Earned Distinctions */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h2 style={{ fontWeight: 700, fontSize: '20px' }}>Earned Distinctions</h2>
+              <h2 style={{ fontWeight: 700, fontSize: '20px' }}>Kazanılan Rozetler</h2>
               <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)', fontSize: '13px', fontWeight: 600 }}>
-                VIEW ALL →
+                TÜMÜNÜ GÖR →
               </button>
             </div>
 

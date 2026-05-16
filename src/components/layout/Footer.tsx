@@ -12,11 +12,11 @@ export function Footer() {
         İşler LearnTwin AI
       </div>
       <div style={{ display: 'flex', gap: '24px', fontSize: '12px', color: 'var(--color-muted)', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <span style={{ cursor: 'pointer' }}>Privacy Policy</span>
-        <span style={{ cursor: 'pointer' }}>Terms of Service</span>
-        <span style={{ cursor: 'pointer' }}>Help Center</span>
-        <span style={{ cursor: 'pointer' }}>API Status</span>
-        <span>© 2024 İşler LearnTwin AI. Precision in Education.</span>
+        <span style={{ cursor: 'pointer' }}>Gizlilik Politikası</span>
+        <span style={{ cursor: 'pointer' }}>Kullanım Koşulları</span>
+        <span style={{ cursor: 'pointer' }}>Yardım Merkezi</span>
+        <span style={{ cursor: 'pointer' }}>API Durumu</span>
+        <span>© 2024 İşler LearnTwin AI. Eğitimde Kesinlik.</span>
       </div>
     </footer>
   )

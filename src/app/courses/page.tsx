@@ -17,7 +17,7 @@ const COURSES: Course[] = [
   {
     id: 'matematik',
     name: 'Matematik',
-    subject: 'ADVANCED MATHEMATICS',
+    subject: 'İLERİ MATEMATİK',
     description: 'Turev, integral, limitler ve olasilik konularini kapsayan kapsamli matematik programi.',
     topics: 7,
     color: '#8083ff',
@@ -25,7 +25,7 @@ const COURSES: Course[] = [
   {
     id: 'fen-bilimleri',
     name: 'Fen Bilimleri',
-    subject: 'SCIENCE',
+    subject: 'FEN BİLİMLERİ',
     description: 'Fizik, kimya ve biyoloji temellerini birlestiren disiplinler arasi bilim programi.',
     topics: 5,
     color: '#10b981',
@@ -33,7 +33,7 @@ const COURSES: Course[] = [
   {
     id: 'turkce',
     name: 'Turkce',
-    subject: 'TURKISH LANGUAGE',
+    subject: 'TÜRKÇE',
     description: 'Dil bilgisi, paragraf analizi ve anlatim bozuklugu konularini iceren dil programi.',
     topics: 5,
     color: '#f59e0b',
