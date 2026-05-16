@@ -3,7 +3,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { questions } from '@/lib/questions'
-import type { Answer, ConfidenceLevel, HintLevel } from '@/types'
+import { questionsScience } from '@/lib/questions-science'
+import { questionsTurkish } from '@/lib/questions-turkish'
+import type { Answer, ConfidenceLevel, HintLevel, Question } from '@/types'
+
+function getQuestions(subject: string): Question[] {
+  if (subject === 'Fen Bilimleri') return questionsScience
+  if (subject === 'Türkçe') return questionsTurkish
+  return questions
+}
 
 const CONFIDENCE_LABELS: Record<ConfidenceLevel, string> = {
   low: 'Emin Değilim',
@@ -23,10 +31,17 @@ export default function SessionPage() {
   const [startTime, setStartTime] = useState(Date.now())
   const [elapsed, setElapsed] = useState(0)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [subjectMeta, setSubjectMeta] = useState({ subject: 'Matematik', topic: 'Problemler' })
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const question = questions[currentIdx]
-  const progress = (currentIdx / questions.length) * 100
+  useEffect(() => {
+    const raw = localStorage.getItem('learntwin_subject')
+    if (raw) setSubjectMeta(JSON.parse(raw))
+  }, [])
+
+  const questionSet = getQuestions(subjectMeta.subject)
+  const question = questionSet[currentIdx]
+  const progress = (currentIdx / questionSet.length) * 100
 
   useEffect(() => {
     setStartTime(Date.now())
@@ -58,7 +73,7 @@ export default function SessionPage() {
     }
     const newAnswers = [...answers, answer]
 
-    if (currentIdx < questions.length - 1) {
+    if (currentIdx < questionSet.length - 1) {
       setAnswers(newAnswers)
       setCurrentIdx(i => i + 1)
       setSelectedAnswer(null)
@@ -75,7 +90,7 @@ export default function SessionPage() {
         const res = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ student, subject: 'Matematik', topic: 'Problemler', answers: newAnswers }),
+          body: JSON.stringify({ student, subject: subjectMeta.subject, topic: subjectMeta.topic, answers: newAnswers }),
         })
         const data = await res.json()
         localStorage.setItem('learntwin_result', JSON.stringify(data))
@@ -112,7 +127,7 @@ export default function SessionPage() {
           <button onClick={() => router.push('/')} style={{ color: 'var(--color-muted)', fontSize: '14px', background: 'none', border: 'none', cursor: 'pointer' }}>
             ← Çıkış
           </button>
-          <div style={{ fontSize: '13px', color: 'var(--color-muted)', fontWeight: 600 }}>{currentIdx + 1} / {questions.length}</div>
+          <div style={{ fontSize: '13px', color: 'var(--color-muted)', fontWeight: 600 }}>{currentIdx + 1} / {questionSet.length}</div>
           <div style={{ fontSize: '13px', color: 'var(--color-muted)', fontFamily: 'monospace' }}>
             {Math.floor(elapsed / 60).toString().padStart(2, '0')}:{(elapsed % 60).toString().padStart(2, '0')}
           </div>
@@ -210,7 +225,7 @@ export default function SessionPage() {
           style={{ justifyContent: 'center', fontSize: '16px', padding: '14px', opacity: (!submitted && (!selectedAnswer || !confidence)) ? 0.5 : 1 }}
         >
           {submitted
-            ? (currentIdx < questions.length - 1 ? 'Sonraki Soru →' : 'Analizi Gör →')
+            ? (currentIdx < questionSet.length - 1 ? 'Sonraki Soru →' : 'Analizi Gör →')
             : 'Cevapla'}
         </button>
       </div>

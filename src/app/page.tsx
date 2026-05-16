@@ -3,17 +3,35 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+type Step = 'roles' | 'subject' | 'name'
+
+const SUBJECTS = [
+  { label: 'Matematik', topic: 'Problemler', icon: '📐', color: '#6366f1' },
+  { label: 'Fen Bilimleri', topic: 'Fizik & Kimya & Biyoloji', icon: '🔬', color: '#10b981' },
+  { label: 'Türkçe', topic: 'Dil ve Anlam', icon: '📖', color: '#f59e0b' },
+]
+
 export default function Home() {
   const router = useRouter()
   const [studentName, setStudentName] = useState('')
-  const [showNameInput, setShowNameInput] = useState(false)
+  const [step, setStep] = useState<Step>('roles')
+  const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0])
+
+  function handleSelectSubject(sub: typeof SUBJECTS[0]) {
+    setSelectedSubject(sub)
+    setStep('name')
+  }
 
   function handleStartSession() {
     if (!studentName.trim()) return
-    const id = `stu_${Date.now()}`
+    const existing = localStorage.getItem('learntwin_student')
+    const id = existing ? JSON.parse(existing).id : `stu_${Date.now()}`
     localStorage.setItem('learntwin_student', JSON.stringify({ id, name: studentName.trim() }))
+    localStorage.setItem('learntwin_subject', JSON.stringify({ subject: selectedSubject.label, topic: selectedSubject.topic }))
     router.push('/student/session')
   }
+
+  const hasHistory = typeof window !== 'undefined' && !!localStorage.getItem('learntwin_student')
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16">
@@ -58,58 +76,106 @@ export default function Home() {
           </p>
         </div>
 
-        {!showNameInput ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', width: '100%' }}>
-            <button
-              onClick={() => setShowNameInput(true)}
-              className="glass-card"
-              style={{ padding: '28px 24px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', border: 'none' }}
-            >
-              <div style={{ fontSize: '36px' }}>🎓</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '6px' }}>Öğrenci</div>
-                <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.5 }}>
-                  5 soruluk mini test çöz, kendi öğrenme ikizini keşfet.
+        {step === 'roles' && (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', width: '100%' }}>
+              <button
+                onClick={() => setStep('subject')}
+                className="glass-card"
+                style={{ padding: '28px 24px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', border: 'none' }}
+              >
+                <div style={{ fontSize: '36px' }}>🎓</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '6px' }}>Öğrenci</div>
+                  <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.5 }}>
+                    5 soruluk mini test çöz, kendi öğrenme ikizini keşfet.
+                  </div>
                 </div>
-              </div>
-              <div style={{ marginTop: 'auto', fontSize: '13px', color: '#6366f1', fontWeight: 600 }}>Başla →</div>
-            </button>
+                <div style={{ marginTop: 'auto', fontSize: '13px', color: '#6366f1', fontWeight: 600 }}>Başla →</div>
+              </button>
 
-            <button
-              onClick={() => router.push('/teacher')}
-              className="glass-card"
-              style={{ padding: '28px 24px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', border: 'none' }}
-            >
-              <div style={{ fontSize: '36px' }}>📊</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '6px' }}>Öğretmen</div>
-                <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.5 }}>
-                  Sınıfının öğrenme haritasını gör, riskli öğrencileri tespit et.
+              <button
+                onClick={() => router.push('/teacher')}
+                className="glass-card"
+                style={{ padding: '28px 24px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', border: 'none' }}
+              >
+                <div style={{ fontSize: '36px' }}>📊</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '6px' }}>Öğretmen</div>
+                  <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.5 }}>
+                    Sınıfının öğrenme haritasını gör, riskli öğrencileri tespit et.
+                  </div>
                 </div>
-              </div>
-              <div style={{ marginTop: 'auto', fontSize: '13px', color: '#f59e0b', fontWeight: 600 }}>Paneli Aç →</div>
-            </button>
+                <div style={{ marginTop: 'auto', fontSize: '13px', color: '#f59e0b', fontWeight: 600 }}>Paneli Aç →</div>
+              </button>
 
-            <button
-              onClick={() => router.push('/parent')}
-              className="glass-card"
-              style={{ padding: '28px 24px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', border: 'none' }}
-            >
-              <div style={{ fontSize: '36px' }}>👨‍👩‍👧</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '6px' }}>Veli</div>
-                <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.5 }}>
-                  Çocuğunun nasıl desteklenmesi gerektiğini sade dille anla.
+              <button
+                onClick={() => router.push('/parent')}
+                className="glass-card"
+                style={{ padding: '28px 24px', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '12px', border: 'none' }}
+              >
+                <div style={{ fontSize: '36px' }}>👨‍👩‍👧</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '6px' }}>Veli</div>
+                  <div style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.5 }}>
+                    Çocuğunun nasıl desteklenmesi gerektiğini sade dille anla.
+                  </div>
                 </div>
-              </div>
-              <div style={{ marginTop: 'auto', fontSize: '13px', color: '#10b981', fontWeight: 600 }}>Raporu Gör →</div>
-            </button>
-          </div>
-        ) : (
+                <div style={{ marginTop: 'auto', fontSize: '13px', color: '#10b981', fontWeight: 600 }}>Raporu Gör →</div>
+              </button>
+            </div>
+
+            {hasHistory && (
+              <button
+                onClick={() => router.push('/student/history')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                📋 Geçmiş testlerimi gör
+              </button>
+            )}
+          </>
+        )}
+
+        {step === 'subject' && (
           <div className="glass-card fade-in" style={{ padding: '36px', width: '100%', maxWidth: '480px' }}>
             <div style={{ marginBottom: '24px' }}>
-              <div style={{ fontWeight: 700, fontSize: '20px', marginBottom: '8px' }}>Merhaba! Adın ne?</div>
-              <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>TYT Matematik • Problemler • 5 Soru</div>
+              <div style={{ fontWeight: 700, fontSize: '20px', marginBottom: '8px' }}>Hangi dersten test çözmek istiyorsun?</div>
+              <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>5 soru · AI analizi · Kişisel rapor</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+              {SUBJECTS.map(sub => (
+                <button
+                  key={sub.label}
+                  onClick={() => handleSelectSubject(sub)}
+                  style={{
+                    width: '100%', textAlign: 'left', padding: '16px 18px', borderRadius: '12px',
+                    border: `1px solid ${sub.color}30`, background: `${sub.color}08`,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px',
+                  }}
+                >
+                  <span style={{ fontSize: '24px' }}>{sub.icon}</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '15px', color: sub.color }}>{sub.label}</div>
+                    <div style={{ color: 'var(--color-muted)', fontSize: '12px', marginTop: '2px' }}>{sub.topic}</div>
+                  </div>
+                  <span style={{ marginLeft: 'auto', color: sub.color, fontSize: '18px' }}>→</span>
+                </button>
+              ))}
+            </div>
+            <button className="btn-outline" onClick={() => setStep('roles')} style={{ width: '100%', justifyContent: 'center' }}>Geri</button>
+          </div>
+        )}
+
+        {step === 'name' && (
+          <div className="glass-card fade-in" style={{ padding: '36px', width: '100%', maxWidth: '480px' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <span style={{ fontSize: '22px' }}>{selectedSubject.icon}</span>
+                <div style={{ fontWeight: 700, fontSize: '20px' }}>Merhaba! Adın ne?</div>
+              </div>
+              <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>
+                {selectedSubject.label} · {selectedSubject.topic} · 5 Soru
+              </div>
             </div>
             <input
               autoFocus
@@ -125,7 +191,7 @@ export default function Home() {
               }}
             />
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button className="btn-outline" onClick={() => setShowNameInput(false)} style={{ flex: 1 }}>Geri</button>
+              <button className="btn-outline" onClick={() => setStep('subject')} style={{ flex: 1 }}>Geri</button>
               <button
                 className="btn-primary"
                 onClick={handleStartSession}

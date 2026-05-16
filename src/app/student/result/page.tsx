@@ -148,7 +148,8 @@ export default function ResultPage() {
         </div>
 
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="btn-outline" onClick={() => router.push('/student/session')} style={{ flex: 1, justifyContent: 'center' }}>Tekrar Çöz</button>
+          <button className="btn-outline" onClick={() => router.push('/student/history')} style={{ flex: 1, justifyContent: 'center' }}>Geçmişim</button>
+          <button className="btn-outline" onClick={() => router.push('/')} style={{ flex: 1, justifyContent: 'center' }}>Tekrar Çöz</button>
           <button className="btn-primary" onClick={() => router.push('/')} style={{ flex: 1, justifyContent: 'center' }}>Ana Sayfa</button>
         </div>
       </div>
