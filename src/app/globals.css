@@ -261,6 +261,24 @@ body {
 }
 .btn-text:hover { background: var(--color-accent-dim); }
 
+.btn-outline {
+  background: transparent;
+  color: var(--on-surface);
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  border: 0.5px solid var(--border-highlight);
+  cursor: pointer;
+  transition: background var(--duration-fast) ease, border-color var(--duration-fast) ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-inter);
+}
+.btn-outline:hover { background: var(--surface-mid); border-color: rgba(255, 255, 255, 0.2); }
+
 /* Input Fields */
 .input-field {
   background: var(--surface-lowest);

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { TopNav } from '@/components/layout/TopNav'
+import { Footer } from '@/components/layout/Footer'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Toast } from '@/components/ui/Toast'
 import { Skeleton, SkeletonCard } from '@/components/ui/Skeleton'
@@ -165,8 +167,10 @@ export default function TeacherClassPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-10">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <TopNav active="dashboard" />
+      <main className="flex-1 px-4 py-10">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <PageHeader title="Sınıf Yönetimi" subtitle="Öğretmen sınıflarını oluştur, düzenle ve incele." backHref="/teacher" backLabel="Öğretmen Paneli" />
 
         {toast && (
@@ -305,5 +309,7 @@ export default function TeacherClassPage() {
         </section>
       </div>
     </main>
+    <Footer />
+  </div>
   )
 }

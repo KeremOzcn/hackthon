@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { TopNav } from '@/components/layout/TopNav'
+import { Footer } from '@/components/layout/Footer'
 import RiskBarChart from '@/components/charts/RiskBarChart'
 import AccuracyTrend from '@/components/charts/AccuracyTrend'
 import TwinDistribution from '@/components/charts/TwinDistribution'
@@ -173,7 +175,9 @@ export default function TeacherAnalyticsPage() {
     }
 
     return (
-        <main className="min-h-screen px-4 py-8" style={{ backgroundColor: 'var(--bg-primary)', color: 'var(--color-text)' }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--surface)' }}>
+        <TopNav active="analytics" />
+        <main className="flex-1 px-4 py-8" style={{ color: 'var(--color-text)' }}>
             <div className="w-full max-w-7xl mx-auto flex flex-col gap-8">
 
                 {/* Üst Navigasyon ve Başlık */}
@@ -245,5 +249,7 @@ export default function TeacherAnalyticsPage() {
 
             </div>
         </main>
+        <Footer />
+      </div>
     )
 }
