@@ -63,7 +63,16 @@ export default function TeacherPage() {
             <h1 style={{ fontWeight: 800, fontSize: '24px' }}>Öğretmen Paneli</h1>
             <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>TYT Matematik — Problemler</div>
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--color-muted)' }}>{sessions.length} öğrenci analizi</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+            <button
+              onClick={() => router.push('/teacher/analytics')}
+              className="btn-primary"
+              style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '8px' }}
+            >
+              📊 Analitik Paneli →
+            </button>
+            <div style={{ fontSize: '13px', color: 'var(--color-muted)' }}>{sessions.length} öğrenci analizi</div>
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
