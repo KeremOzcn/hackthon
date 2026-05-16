@@ -13,7 +13,7 @@ const mockData = [
     { date: '16 Mayıs', accuracy: 75 },
 ]
 
-export default function AccuracyTrend({ data = mockData }) {
+export default function AccuracyTrend({ data = mockData }: { data?: { date: string; accuracy: number }[] }) {
     return (
         <div className="glass-card" style={{ padding: '24px', height: '350px', width: '100%', display: 'flex', flexDirection: 'column' }}>
             <div style={{ marginBottom: '20px' }}>
