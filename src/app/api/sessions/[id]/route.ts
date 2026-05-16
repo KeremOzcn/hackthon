@@ -9,7 +9,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('learning_twin_results')
-    .select('id,subject,topic,twin_type,risk_level,accuracy,avg_time_seconds,hints_used,created_at,dominant_pattern,next_best_action')
+    .select('id,subject,topic,twin_type,risk_level,accuracy,avg_time_seconds,hints_used,created_at,dominant_pattern,next_best_action,achievements')
     .eq('student_id', id)
     .order('created_at', { ascending: false })
     .limit(50)
@@ -30,6 +30,7 @@ export async function GET(
     completedAt: row.created_at,
     dominantPattern: row.dominant_pattern ?? '',
     nextBestAction: row.next_best_action ?? '',
+    achievements: row.achievements ?? [],
   }))
 
   return NextResponse.json({ sessions })

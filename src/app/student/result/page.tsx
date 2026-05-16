@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
-import type { LearningTwinResult, TwinType } from '@/types'
+import type { Achievement, LearningTwinResult, TwinType } from '@/types'
+import { generateStudentPDF } from '@/lib/pdf'
 
 const TWIN_ICONS: Record<TwinType, string> = {
   'Hızlı ama Dikkatsiz': '⚡',
@@ -41,11 +42,33 @@ export default function ResultPage() {
   const router = useRouter()
   const [result, setResult] = useState<LearningTwinResult | { error: true } | null>(null)
   const [studentName, setStudentName] = useState('Öğrenci')
+  const [isPdfLoading, setIsPdfLoading] = useState(false)
   const [tab, setTab] = useState<'student' | 'teacher' | 'parent'>('student')
 
   function safeParse<T>(value: string | null): T | null {
     if (!value) return null
     try { return JSON.parse(value) as T } catch { return null }
+  }
+
+  async function handleDownloadPDF() {
+    if (!result || 'error' in result) return
+    setIsPdfLoading(true)
+    try {
+      const achievements = (result as any).gamification?.earnedAchievements as Achievement[] | undefined
+      const url = await generateStudentPDF(result, studentName, achievements)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `ogrenci-raporu-${studentName.replace(/\s+/g, '_')}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      setTimeout(() => URL.revokeObjectURL(url), 60000)
+    } catch (e) {
+      console.error('PDF generation failed', e)
+      alert('PDF oluşturulurken bir hata oluştu.')
+    } finally {
+      setIsPdfLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -226,6 +249,7 @@ export default function ResultPage() {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button className="btn-outline" onClick={() => router.push('/student/history')} style={{ flex: 1, justifyContent: 'center' }}>Geçmişim</button>
             <button className="btn-outline" onClick={() => router.push('/student/achievements')} style={{ flex: 1, justifyContent: 'center' }}>Rozetlerim</button>
+            <button className="btn-outline" onClick={handleDownloadPDF} disabled={isPdfLoading} style={{ flex: 1, justifyContent: 'center' }}>{isPdfLoading ? 'Oluşturuluyor...' : 'PDF İndir'}</button>
             <button className="btn-primary" onClick={() => router.push('/')} style={{ flex: 1, justifyContent: 'center' }}>Ana Sayfa</button>
           </div>
 
