@@ -24,15 +24,28 @@ const RISK_LABEL: Record<string, string> = { low: 'Düşük Risk', medium: 'Orta
 
 export default function ResultPage() {
   const router = useRouter()
-  const [result, setResult] = useState<LearningTwinResult | null>(null)
+  const [result, setResult] = useState<LearningTwinResult | { error: true } | null>(null)
   const [studentName, setStudentName] = useState('Öğrenci')
   const [tab, setTab] = useState<'student' | 'teacher' | 'parent'>('student')
 
+  function safeParse<T>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
-    const raw = localStorage.getItem('learntwin_result')
-    if (raw) setResult(JSON.parse(raw))
-    const st = localStorage.getItem('learntwin_student')
-    if (st) setStudentName(JSON.parse(st).name)
+    const raw = safeParse<LearningTwinResult | { error?: boolean }>(localStorage.getItem('learntwin_result'))
+    if (raw && 'error' in raw) {
+      setResult({ error: true })
+    } else if (raw) {
+      setResult(raw as LearningTwinResult)
+    }
+    const st = safeParse<{ name?: string }>(localStorage.getItem('learntwin_student'))
+    if (st?.name) setStudentName(st.name)
   }, [])
 
   if (!result) {

@@ -38,10 +38,19 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [studentName, setStudentName] = useState('')
 
+  function safeParse<T>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
     const raw = localStorage.getItem('learntwin_student')
-    if (!raw) { router.push('/'); return }
-    const student = JSON.parse(raw)
+    const student = safeParse<{ id?: string; name?: string }>(raw)
+    if (!student?.id) { router.push('/'); return }
     setStudentName(student.name)
 
     supabase
