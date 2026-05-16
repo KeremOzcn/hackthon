@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Step = 'roles' | 'subject' | 'name'
@@ -16,6 +16,20 @@ export default function Home() {
   const [studentName, setStudentName] = useState('')
   const [step, setStep] = useState<Step>('roles')
   const [selectedSubject, setSelectedSubject] = useState(SUBJECTS[0])
+  const [hasHistory, setHasHistory] = useState(false)
+
+  function safeParse<T>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
+  useEffect(() => {
+    setHasHistory(!!localStorage.getItem('learntwin_student'))
+  }, [])
 
   function handleSelectSubject(sub: typeof SUBJECTS[0]) {
     setSelectedSubject(sub)
@@ -24,14 +38,12 @@ export default function Home() {
 
   function handleStartSession() {
     if (!studentName.trim()) return
-    const existing = localStorage.getItem('learntwin_student')
-    const id = existing ? JSON.parse(existing).id : `stu_${Date.now()}`
+    const existing = safeParse<{ id?: string }>(localStorage.getItem('learntwin_student'))
+    const id = existing?.id ?? `stu_${Date.now()}`
     localStorage.setItem('learntwin_student', JSON.stringify({ id, name: studentName.trim() }))
     localStorage.setItem('learntwin_subject', JSON.stringify({ subject: selectedSubject.label, topic: selectedSubject.topic }))
     router.push('/student/session')
   }
-
-  const hasHistory = typeof window !== 'undefined' && !!localStorage.getItem('learntwin_student')
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 py-16">

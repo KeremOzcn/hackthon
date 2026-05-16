@@ -11,12 +11,14 @@ interface RequestBody {
   subject: string
   topic: string
   answers: Answer[]
+  classInfo?: { id?: string; name?: string; grade?: string }
 }
 
 function computeStats(answers: Answer[]) {
   if (answers.length === 0) {
     return { accuracy: 0, avgTimeSeconds: 0, hintsUsed: 0, highConfidenceWrong: 0 }
   }
+
   const correct = answers.filter(a => a.isCorrect).length
   const accuracy = Math.round((correct / answers.length) * 100)
   const avgTime = Math.round(answers.reduce((s, a) => s + a.timeSpentSeconds, 0) / answers.length)
@@ -37,7 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { student, subject, topic, answers } = body
+  const { student, subject, topic, answers, classInfo } = body
   const stats = computeStats(answers)
 
   const safeSubject = sanitizeForPrompt(subject)
@@ -113,6 +115,9 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
     const { error: insertError } = await supabase.from('learning_twin_results').insert({
       student_id: student.id,
       student_name: student.name,
+      class_id: classInfo?.id ?? null,
+      class_name: classInfo?.name ?? null,
+      class_grade: classInfo?.grade ?? null,
       subject,
       topic,
       twin_type: result.twinType,

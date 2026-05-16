@@ -34,6 +34,9 @@ export interface AnswerSession {
   id?: string
   studentId: string
   studentName: string
+  classId?: string
+  className?: string
+  classGrade?: string
   subject: string
   topic: string
   answers: Answer[]

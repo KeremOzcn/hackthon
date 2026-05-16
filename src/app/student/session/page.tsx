@@ -34,9 +34,19 @@ export default function SessionPage() {
   const [subjectMeta, setSubjectMeta] = useState({ subject: 'Matematik', topic: 'Problemler' })
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  function safeParse<T>(value: string | null): T | null {
+    if (!value) return null
+    try {
+      return JSON.parse(value) as T
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
     const raw = localStorage.getItem('learntwin_subject')
-    if (raw) setSubjectMeta(JSON.parse(raw))
+    const parsed = safeParse<{ subject?: string; topic?: string }>(raw)
+    if (parsed?.subject && parsed?.topic) setSubjectMeta({ subject: parsed.subject, topic: parsed.topic })
   }, [])
 
   const questionSet = getQuestions(subjectMeta.subject)
@@ -83,14 +93,14 @@ export default function SessionPage() {
       setSubmitted(false)
     } else {
       setIsAnalyzing(true)
-      const studentRaw = localStorage.getItem('learntwin_student')
-      const student = studentRaw ? JSON.parse(studentRaw) : { id: 'demo', name: 'Öğrenci' }
+      const student = safeParse<{ id?: string; name?: string }>(localStorage.getItem('learntwin_student')) ?? { id: 'demo', name: 'Öğrenci' }
 
       try {
+        const classInfo = safeParse<{ id?: string; name?: string; grade?: string }>(localStorage.getItem('learntwin_class')) ?? undefined
         const res = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ student, subject: subjectMeta.subject, topic: subjectMeta.topic, answers: newAnswers }),
+          body: JSON.stringify({ student, subject: subjectMeta.subject, topic: subjectMeta.topic, answers: newAnswers, classInfo }),
         })
         const data = await res.json()
         localStorage.setItem('learntwin_result', JSON.stringify(data))
