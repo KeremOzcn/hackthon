@@ -12,7 +12,7 @@ export function Skeleton({ height = '20px', width = '100%', borderRadius = '8px'
         height,
         width,
         borderRadius,
-        background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%)',
+        background: 'linear-gradient(90deg, var(--surface-container) 25%, var(--surface-container-high) 50%, var(--surface-container) 75%)',
         backgroundSize: '200% 100%',
         animation: 'skeleton-shimmer 1.5s infinite',
         ...style,

@@ -10,10 +10,10 @@ interface ToastProps {
 }
 
 const TOAST_STYLES: Record<ToastVariant, { border: string; accent: string; label: string }> = {
-  success: { border: 'rgba(16,185,129,0.28)', accent: '#10b981', label: 'Başarılı' },
-  error: { border: 'rgba(244,63,94,0.28)', accent: '#f43f5e', label: 'Hata' },
-  warning: { border: 'rgba(245,158,11,0.28)', accent: '#f59e0b', label: 'Uyarı' },
-  info: { border: 'rgba(99,102,241,0.28)', accent: '#6366f1', label: 'Bilgi' },
+  success: { border: 'rgba(52,211,153,0.28)', accent: 'var(--success)', label: 'Başarılı' },
+  error: { border: 'rgba(251,113,133,0.28)', accent: 'var(--error)', label: 'Hata' },
+  warning: { border: 'rgba(251,191,36,0.28)', accent: 'var(--warning)', label: 'Uyarı' },
+  info: { border: 'rgba(129,140,248,0.28)', accent: 'var(--color-accent)', label: 'Bilgi' },
 }
 
 export function Toast({ title, message, variant = 'info', onClose }: ToastProps) {

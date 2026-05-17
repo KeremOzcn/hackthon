@@ -17,9 +17,9 @@ interface ToastProps {
 
 const ICONS: Record<ToastType, string> = { success: '✅', error: '❌', info: 'ℹ️' }
 const COLORS: Record<ToastType, string> = {
-  success: '#10b981',
-  error: '#f43f5e',
-  info: '#6366f1',
+  success: 'var(--success)',
+  error: 'var(--error)',
+  info: 'var(--color-accent)',
 }
 
 function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: string) => void }) {
@@ -38,7 +38,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastMessage; onDismiss: (id: 
     <div
       style={{
         display: 'flex', alignItems: 'center', gap: '10px',
-        background: 'rgba(15, 23, 42, 0.95)',
+        background: 'var(--surface-container-low)',
         border: `1px solid ${COLORS[toast.type]}40`,
         borderLeft: `3px solid ${COLORS[toast.type]}`,
         borderRadius: '12px', padding: '12px 16px',
