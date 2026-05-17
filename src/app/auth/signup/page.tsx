@@ -12,7 +12,6 @@ const ROLE_LABELS: Record<Role, string> = {
   parent: 'Veli',
 }
 
-const DEMO_FULL_NAME = 'Demo Kullanıcı'
 const DEMO_EMAIL = 'demo@learntwin.ai'
 const DEMO_PASSWORD = 'demo123'
 
@@ -61,50 +60,23 @@ export default function SignupPage() {
   }
 
   async function handleDemoSignup() {
-    setFullName(DEMO_FULL_NAME)
-    setEmail(DEMO_EMAIL)
-    setPassword(DEMO_PASSWORD)
-    setRole('teacher')
     setError('')
     setLoading(true)
 
-    if (DEMO_PASSWORD.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır.')
-      setLoading(false)
-      return
-    }
-
-    const { error: signUpError } = await supabase.auth.signUp({
+    // Try real login first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
-      options: {
-        data: { full_name: DEMO_FULL_NAME, role: 'teacher' },
-      },
     })
 
-    if (signUpError) {
-      if (signUpError.message === 'User already registered') {
-        // Already exists — sign in directly
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: DEMO_EMAIL,
-          password: DEMO_PASSWORD,
-        })
-        if (signInError) {
-          setError('Demo girişi yapılamadı.')
-          setLoading(false)
-          return
-        }
-        router.refresh()
-        router.push('/')
-        return
-      }
-      setError('Kayıt olurken bir hata oluştu.')
-      setLoading(false)
+    if (!signInError) {
+      router.refresh()
+      router.push('/')
       return
     }
 
-    router.refresh()
-    router.push('/')
+    // Fall back to demo session cookie bypass
+    window.location.href = '/api/demo-session'
   }
 
   return (

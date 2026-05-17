@@ -38,47 +38,23 @@ export default function LoginPage() {
   }
 
   async function handleDemoLogin() {
-    setEmail(DEMO_EMAIL)
-    setPassword(DEMO_PASSWORD)
     setError('')
     setLoading(true)
 
-    let { error: signInError } = await supabase.auth.signInWithPassword({
+    // Try real login first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
     })
 
-    if (signInError) {
-      // Auto-create demo account if it doesn't exist
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-        options: {
-          data: { full_name: 'Demo Kullanıcı', role: 'teacher' },
-        },
-      })
-
-      if (signUpError && !signUpError.message.includes('already registered')) {
-        setError('Demo hesabı oluşturulurken bir hata oluştu.')
-        setLoading(false)
-        return
-      }
-
-      // Try signing in again after auto-registration
-      const { error: retryError } = await supabase.auth.signInWithPassword({
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD,
-      })
-
-      if (retryError) {
-        setError('Demo girişi yapılamadı.')
-        setLoading(false)
-        return
-      }
+    if (!signInError) {
+      router.refresh()
+      router.push('/')
+      return
     }
 
-    router.refresh()
-    router.push('/')
+    // Fall back to demo session cookie bypass
+    window.location.href = '/api/demo-session'
   }
 
   return (

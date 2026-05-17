@@ -15,12 +15,19 @@ const NAV_LINKS: { key: NavItem; label: string; href: string }[] = [
   { key: 'resources', label: 'Kaynaklar', href: '#' },
 ]
 
+function isDemoMode(): boolean {
+  if (typeof document === 'undefined') return false
+  return document.cookie.includes('demo_auth=true')
+}
+
 export function TopNav({ active }: TopNavProps) {
   const [userName, setUserName] = useState('')
   const [showMenu, setShowMenu] = useState(false)
   const [showMobileNav, setShowMobileNav] = useState(false)
+  const [demo, setDemo] = useState(false)
 
   useEffect(() => {
+    setDemo(isDemoMode())
     async function loadUser() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
@@ -37,12 +44,15 @@ export function TopNav({ active }: TopNavProps) {
   }
 
   async function handleLogout() {
+    if (demo) {
+      document.cookie = 'demo_auth=; path=/; max-age=0'
+    }
     const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = '/auth/login'
   }
 
-  const isLoggedIn = userName.length > 0
+  const isLoggedIn = userName.length > 0 || demo
 
   return (
     <header
@@ -106,6 +116,26 @@ export function TopNav({ active }: TopNavProps) {
       <div className="hidden md:flex items-center gap-5">
         {isLoggedIn ? (
           <div style={{ position: 'relative' }}>
+            {demo && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-6px',
+                  right: '-6px',
+                  background: 'var(--warning)',
+                  color: '#000',
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '999px',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.04em',
+                  zIndex: 10,
+                }}
+              >
+                DEMO
+              </span>
+            )}
             <div
               className="flex items-center justify-center text-xs font-bold text-white cursor-pointer"
               onClick={() => setShowMenu(v => !v)}
@@ -113,11 +143,11 @@ export function TopNav({ active }: TopNavProps) {
                 width: '36px',
                 height: '36px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #6366f1, #a78bfa)',
+                background: demo ? 'linear-gradient(135deg, var(--warning), #f59e0b)' : 'linear-gradient(135deg, #6366f1, #a78bfa)',
                 border: '0.5px solid var(--border-highlight)',
               }}
             >
-              {getInitials(userName)}
+              {demo ? 'D' : getInitials(userName)}
             </div>
 
             {showMenu && (
@@ -149,7 +179,7 @@ export function TopNav({ active }: TopNavProps) {
                   }}
                 >
                   <div style={{ padding: '8px 12px', fontSize: '13px', color: 'var(--color-muted)', borderBottom: '0.5px solid var(--border-subtle)', marginBottom: '4px' }}>
-                    {userName}
+                    {demo ? 'Demo Kullanıcı' : userName}
                   </div>
                   <button
                     onClick={handleLogout}
@@ -199,6 +229,20 @@ export function TopNav({ active }: TopNavProps) {
 
       {/* Mobile hamburger */}
       <div className="flex md:hidden items-center gap-3">
+        {isLoggedIn && (
+          <div
+            className="flex items-center justify-center text-xs font-bold text-white"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              background: demo ? 'linear-gradient(135deg, var(--warning), #f59e0b)' : 'linear-gradient(135deg, #6366f1, #a78bfa)',
+              border: '0.5px solid var(--border-highlight)',
+            }}
+          >
+            {demo ? 'D' : getInitials(userName)}
+          </div>
+        )}
         <button
           className="flex flex-col justify-center items-center gap-1.5"
           style={{ width: '32px', height: '32px', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -307,13 +351,18 @@ export function TopNav({ active }: TopNavProps) {
               </div>
             )}
             {isLoggedIn && (
-              <button
-                onClick={() => { setShowMobileNav(false); handleLogout() }}
-                className="text-left py-3 text-sm font-medium"
-                style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                Çıkış Yap
-              </button>
+              <>
+                <div className="py-2 text-xs" style={{ color: 'var(--color-muted)' }}>
+                  {demo ? 'Demo Kullanıcı' : userName}
+                </div>
+                <button
+                  onClick={() => { setShowMobileNav(false); handleLogout() }}
+                  className="text-left py-3 text-sm font-medium"
+                  style={{ color: '#f43f5e', background: 'none', border: 'none', cursor: 'pointer' }}
+                >
+                  Çıkış Yap
+                </button>
+              </>
             )}
           </div>
         </>
