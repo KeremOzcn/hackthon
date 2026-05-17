@@ -12,6 +12,10 @@ const ROLE_LABELS: Record<Role, string> = {
   parent: 'Veli',
 }
 
+const DEMO_FULL_NAME = 'Demo Kullanıcı'
+const DEMO_EMAIL = 'demo@learntwin.ai'
+const DEMO_PASSWORD = 'demo123'
+
 export default function SignupPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -47,6 +51,43 @@ export default function SignupPage() {
     if (signUpError) {
       setError(signUpError.message === 'User already registered'
         ? 'Bu e-posta adresi zaten kayıtlı.'
+        : 'Kayıt olurken bir hata oluştu.')
+      setLoading(false)
+      return
+    }
+
+    router.refresh()
+    router.push('/')
+  }
+
+  async function handleDemoSignup() {
+    setFullName(DEMO_FULL_NAME)
+    setEmail(DEMO_EMAIL)
+    setPassword(DEMO_PASSWORD)
+    setRole('teacher')
+    setError('')
+    setLoading(true)
+
+    if (DEMO_PASSWORD.length < 6) {
+      setError('Şifre en az 6 karakter olmalıdır.')
+      setLoading(false)
+      return
+    }
+
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      options: {
+        data: {
+          full_name: DEMO_FULL_NAME,
+          role: 'teacher',
+        },
+      },
+    })
+
+    if (signUpError) {
+      setError(signUpError.message === 'User already registered'
+        ? 'Bu demo hesap zaten kayıtlı. Giriş sayfasından demo girişini deneyin.'
         : 'Kayıt olurken bir hata oluştu.')
       setLoading(false)
       return
@@ -154,7 +195,7 @@ export default function SignupPage() {
           </div>
 
           {error && (
-            <div style={{ color: '#f43f5e', fontSize: '13px', textAlign: 'center' }}>
+            <div style={{ color: 'var(--error)', fontSize: '13px', textAlign: 'center' }}>
               {error}
             </div>
           )}
@@ -169,7 +210,37 @@ export default function SignupPage() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--color-muted)' }}>
+        {/* Demo section */}
+        <div
+          className="elevated-card"
+          style={{ padding: '16px', marginTop: '20px', textAlign: 'center' }}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginBottom: '10px' }}>
+            Hızlı Demo
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
+              <span style={{ color: 'var(--color-muted)' }}>Rol:</span> Öğretmen
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
+              <span style={{ color: 'var(--color-muted)' }}>E-posta:</span> {DEMO_EMAIL}
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
+              <span style={{ color: 'var(--color-muted)' }}>Şifre:</span> {DEMO_PASSWORD}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleDemoSignup}
+            disabled={loading}
+            className="btn-ghost"
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            {loading ? 'Kaydediliyor...' : 'Demo Hesap Oluştur'}
+          </button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--color-muted)' }}>
           Zaten hesabınız var mı?{' '}
           <a href="/auth/login" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
             Giriş yapın

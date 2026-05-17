@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 
+const DEMO_EMAIL = 'demo@learntwin.ai'
+const DEMO_PASSWORD = 'demo123'
+
 export default function LoginPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -26,6 +29,27 @@ export default function LoginPage() {
       setError(signInError.message === 'Invalid login credentials'
         ? 'E-posta veya şifre hatalı.'
         : 'Giriş yapılırken bir hata oluştu.')
+      setLoading(false)
+      return
+    }
+
+    router.refresh()
+    router.push('/')
+  }
+
+  async function handleDemoLogin() {
+    setEmail(DEMO_EMAIL)
+    setPassword(DEMO_PASSWORD)
+    setError('')
+    setLoading(true)
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    })
+
+    if (signInError) {
+      setError('Demo hesabı bulunamadı. Lütfen kendi bilgilerinizle giriş yapın.')
       setLoading(false)
       return
     }
@@ -86,7 +110,7 @@ export default function LoginPage() {
           </label>
 
           {error && (
-            <div style={{ color: '#f43f5e', fontSize: '13px', textAlign: 'center' }}>
+            <div style={{ color: 'var(--error)', fontSize: '13px', textAlign: 'center' }}>
               {error}
             </div>
           )}
@@ -101,7 +125,34 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '13px', color: 'var(--color-muted)' }}>
+        {/* Demo section */}
+        <div
+          className="elevated-card"
+          style={{ padding: '16px', marginTop: '20px', textAlign: 'center' }}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginBottom: '10px' }}>
+            Hızlı Demo
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
+              <span style={{ color: 'var(--color-muted)' }}>E-posta:</span> {DEMO_EMAIL}
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
+              <span style={{ color: 'var(--color-muted)' }}>Şifre:</span> {DEMO_PASSWORD}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="btn-ghost"
+            style={{ width: '100%', justifyContent: 'center' }}
+          >
+            {loading ? 'Giriş yapılıyor...' : 'Demo Girişi'}
+          </button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--color-muted)' }}>
           Hesabınız yok mu?{' '}
           <a href="/auth/signup" style={{ color: 'var(--color-accent)', textDecoration: 'none', fontWeight: 600 }}>
             Kaydolun
