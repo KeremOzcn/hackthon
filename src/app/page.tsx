@@ -18,7 +18,7 @@ const FEATURES = [
   },
   {
     title: 'Gerçek Zamanlı Analitik',
-    desc: 'Öğretmenler ve veliler, öğrencinin anlık performansını ve ilerleme grafiğini detaylı raporlarla takip eder.',
+    desc: 'Öğretmenler, öğrencinin anlık performansını ve ilerleme grafiğini detaylı raporlarla takip eder.',
     icon: (
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
     ),
@@ -70,12 +70,7 @@ const TESTIMONIALS = [
     name: 'Ayşe Yılmaz',
     role: 'Matematik Öğretmeni, Ankara',
   },
-  {
-    quote: 'Oğlum matematikte sürekli zorlanıyordu. Artık kendi hızında ilerliyor ve sınav notları ciddi şekilde yükseldi.',
-    name: 'Mehmet Kaya',
-    role: 'Veli, İstanbul',
-  },
-  {
+{
     quote: 'Önce tereddüt ettim ama yapay zeka bana tam olarak nerede eksik olduğumu gösterdi. Bu sistemle ders çalışmak keyifli hale geldi.',
     name: 'Elif Demir',
     role: '11. Sınıf Öğrencisi, İzmir',
@@ -98,10 +93,6 @@ const FAQ = [
   {
     q: 'Verilerim güvende mi?',
     a: 'Tüm veriler şifrelenerek saklanır ve KVKK kapsamında en üst düzey güvenlik önlemleriyle korunur. Üçüncü taraflarla paylaşılmaz.',
-  },
-  {
-    q: 'Aile üyeleri de takip edebilir mi?',
-    a: 'Evet. Veli hesaplarıyla çocuğunuzun günlük ilerlemesini, tamamlanan konuları ve başarı grafiklerini gerçek zamanlı görüntüleyebilirsiniz.',
   },
 ]
 
@@ -462,7 +453,7 @@ export default function LandingPage() {
                   Kullanıcılarımız Ne Diyor?
                 </h2>
                 <p style={{ color: 'var(--color-muted)', fontSize: '17px', maxWidth: '560px', margin: '0 auto', lineHeight: 1.7 }}>
-                  Öğretmenlerden, velilerden ve öğrencilerden gerçek deneyimler.
+                  Öğretmenlerden ve öğrencilerden gerçek deneyimler.
                 </p>
               </div>
 
@@ -585,41 +576,6 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* ========== FINAL CTA ========== */}
-          <section
-            className="gradient-hero"
-            style={{ padding: '100px 20px', textAlign: 'center' }}
-          >
-            <div className="container-dashboard" style={{ maxWidth: '700px', margin: '0 auto' }}>
-              <h2
-                className="gradient-text"
-                style={{
-                  fontFamily: 'var(--font-hanken)',
-                  fontSize: 'clamp(28px, 4vw, 44px)',
-                  fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                  marginBottom: '18px',
-                }}
-              >
-                Geleceğin Eğitimi Bugün Başlıyor
-              </h2>
-              <p
-                style={{
-                  color: 'var(--color-muted)',
-                  fontSize: '17px',
-                  lineHeight: 1.7,
-                  marginBottom: '36px',
-                  maxWidth: '560px',
-                  margin: '0 auto 36px',
-                }}
-              >
-                Ücretsiz hesabınızı oluşturun, yapay zeka destekli öğrenme deneyimini hemen keşfedin.
-              </p>
-              <a href="/auth/signup" className="btn-primary" style={{ textDecoration: 'none' }}>
-                Hemen Ücretsiz Başlayın
-              </a>
-            </div>
-          </section>
 
         </main>
       )}
