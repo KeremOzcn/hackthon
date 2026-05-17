@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-client'
 
@@ -105,16 +104,6 @@ export function TopNav({ active }: TopNavProps) {
 
       {/* Desktop right section */}
       <div className="hidden md:flex items-center gap-5">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="cursor-pointer" style={{ color: 'var(--color-muted)' }}>
-          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="cursor-pointer" style={{ color: 'var(--color-muted)' }}>
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="cursor-pointer" style={{ color: 'var(--color-muted)' }}>
-          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
-        </svg>
-
         {isLoggedIn ? (
           <div style={{ position: 'relative' }}>
             <div
@@ -210,20 +199,6 @@ export function TopNav({ active }: TopNavProps) {
 
       {/* Mobile hamburger */}
       <div className="flex md:hidden items-center gap-3">
-        {isLoggedIn && (
-          <div
-            className="flex items-center justify-center text-xs font-bold text-white"
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #6366f1, #a78bfa)',
-              border: '0.5px solid var(--border-highlight)',
-            }}
-          >
-            {getInitials(userName)}
-          </div>
-        )}
         <button
           className="flex flex-col justify-center items-center gap-1.5"
           style={{ width: '32px', height: '32px', background: 'none', border: 'none', cursor: 'pointer' }}
