@@ -160,7 +160,7 @@ export default function CourseDetailPage() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
-              <button className="btn-ghost" style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <button className="btn-ghost" onClick={() => router.push('/courses')} style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 ← Derslere Don
               </button>
             </div>
