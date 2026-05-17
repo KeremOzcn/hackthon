@@ -202,7 +202,7 @@ function ResultPDF({ result, studentName, achievements }: ResultPDFProps) {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>İşler LearnTwin AI - Öğrenci Raporu</Text>
+          <Text style={styles.headerTitle}>İşleyen - Öğrenci Raporu</Text>
           <Text style={styles.headerMeta}>{studentName} • {dateStr}</Text>
         </View>
 

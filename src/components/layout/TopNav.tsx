@@ -77,7 +77,7 @@ export function TopNav({ active }: TopNavProps) {
             WebkitTextFillColor: 'transparent',
           }}
         >
-          İşler LearnTwin AI
+          İşleyen
         </Link>
         <nav className="hidden md:flex gap-1">
           {NAV_LINKS.map(({ key, label, href }) => {

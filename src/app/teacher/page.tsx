@@ -468,7 +468,7 @@ export default function TeacherPage() {
               </tbody>
             </table>
             <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '11px', color: '#888' }}>
-              İşler LearnTwin AI — Öğretmen Paneli Raporu
+              İşleyen — Öğretmen Paneli Raporu
             </div>
           </div>
         </div>

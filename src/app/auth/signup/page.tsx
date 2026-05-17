@@ -84,7 +84,7 @@ export default function SignupPage() {
       <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '40px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ fontSize: '24px', fontWeight: 800, marginBottom: '8px', fontFamily: 'var(--font-hanken)' }}>
-            İşler LearnTwin AI
+            İşleyen
           </div>
           <div style={{ color: 'var(--color-muted)', fontSize: '14px' }}>
             Yeni hesap oluşturun

@@ -223,7 +223,7 @@ function SessionPDF({ session }: { session: PDFSession }) {
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>İşler LearnTwin AI - Öğrenci Raporu</Text>
+          <Text style={styles.headerTitle}>İşleyen - Öğrenci Raporu</Text>
           <Text style={styles.headerMeta}>
             {session.student_name} • {session.subject} / {session.topic} • {dateStr}
           </Text>

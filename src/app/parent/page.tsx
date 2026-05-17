@@ -355,7 +355,7 @@ export default function ParentPage() {
               </div>
 
               <p style={{ textAlign: 'center', color: 'var(--color-muted)', fontSize: '12px', lineHeight: 1.7 }}>
-                Bu rapor <strong style={{ color: 'var(--color-text)' }}>İşler LearnTwin AI</strong> tarafindan {d.student_name}&apos;nin soru cozum davranisindan otomatik olusturulmustur.
+                Bu rapor <strong style={{ color: 'var(--color-text)' }}>İşleyen</strong> tarafindan {d.student_name}&apos;nin soru cozum davranisindan otomatik olusturulmustur.
               </p>
             </>
           )}

@@ -87,7 +87,7 @@ export function Footer() {
               WebkitTextFillColor: 'transparent',
             }}
           >
-            İşler LearnTwin AI
+            İşleyen
           </div>
           <p
             className="text-sm leading-relaxed"
@@ -194,7 +194,7 @@ export function Footer() {
           className="text-xs"
           style={{ color: 'var(--color-muted)', fontFamily: 'var(--font-inter)' }}
         >
-          &copy; 2025 İşler LearnTwin AI. Tüm hakları saklıdır.
+          &copy; 2025 İşleyen. Tüm hakları saklıdır.
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
           <Link

@@ -7,7 +7,7 @@ const hanken = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-hanken" })
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "İşler LearnTwin AI",
+  title: "İşleyen",
   description: "Her öğrencinin öğrenme biçimi görünür olsun.",
 };
 

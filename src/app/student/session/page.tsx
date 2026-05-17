@@ -218,7 +218,7 @@ export default function SessionPage() {
           ✕
         </button>
         <div style={{ fontWeight: 800, fontSize: '16px', fontFamily: 'var(--font-hanken)', letterSpacing: '-0.02em' }}>
-          İşler LearnTwin AI
+          İşleyen
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-subtle)', borderRadius: '8px', padding: '6px 12px', fontSize: '13px', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
           ⏱ {timerStr}

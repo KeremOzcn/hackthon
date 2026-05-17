@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const safeTopic = sanitizeForPrompt(topic)
   const safeStudentName = sanitizeForPrompt(student.name)
 
-  const prompt = `Sen İşler LearnTwin AI'ın eğitim analisti yapay zekasısın. ${safeSubject} - ${safeTopic} bölümünde öğrenci çözüm davranışını analiz ediyorsun.
+  const prompt = `Sen İşleyen'ın eğitim analisti yapay zekasısın. ${safeSubject} - ${safeTopic} bölümünde öğrenci çözüm davranışını analiz ediyorsun.
 
 Öğrenci: ${safeStudentName}
 Ders: ${safeSubject} - ${safeTopic}
