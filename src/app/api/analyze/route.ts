@@ -4,8 +4,11 @@ import { supabase } from '@/lib/supabase'
 import { computeAchievements } from '@/lib/gamification'
 import type { Answer, LearningTwinResult } from '@/types'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+function getModel() {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not configured')
+  return new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-2.5-flash' })
+}
 
 interface RequestBody {
   student: { id: string; name: string }
@@ -82,7 +85,7 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
 
   try {
     const [geminiResult, { data: prevSessions }] = await Promise.all([
-      model.generateContent(prompt),
+      getModel().generateContent(prompt),
       supabase
         .from('learning_twin_results')
         .select('subject, accuracy, created_at')
