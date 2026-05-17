@@ -3,7 +3,7 @@ import { Footer } from './Footer'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
-  activeNav?: 'dashboard' | 'courses' | 'analytics' | 'resources'
+  activeNav?: 'dashboard' | 'courses' | 'analytics'
 }
 
 export function DashboardLayout({ children, activeNav }: DashboardLayoutProps) {

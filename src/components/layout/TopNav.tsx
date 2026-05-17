@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-client'
 
-type NavItem = 'dashboard' | 'courses' | 'analytics' | 'resources'
+type NavItem = 'dashboard' | 'courses' | 'analytics'
 
 interface TopNavProps {
   active?: NavItem
@@ -12,7 +12,6 @@ const NAV_LINKS: { key: NavItem; label: string; href: string }[] = [
   { key: 'dashboard', label: 'Panel', href: '/teacher' },
   { key: 'courses',   label: 'Dersler',   href: '/courses' },
   { key: 'analytics', label: 'Analitik', href: '/teacher/analytics' },
-  { key: 'resources', label: 'Kaynaklar', href: '#' },
 ]
 
 function isDemoMode(): boolean {

@@ -14,12 +14,32 @@ interface TopicPerf {
   avg: number
 }
 
+interface TopicInfo {
+  id: string
+  name: string
+  order_index: number
+}
+
 interface CourseData {
   name: string
   subject: string
-  topics: string[]
+  slug: string
+  topics: TopicInfo[]
   color: string
   perfData: TopicPerf[]
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[ı]/g, 'i')
+    .replace(/[ğ]/g, 'g')
+    .replace(/[ü]/g, 'u')
+    .replace(/[ş]/g, 's')
+    .replace(/[ö]/g, 'o')
+    .replace(/[ç]/g, 'c')
+    .replace(/[^a-z0-9-]/g, '')
 }
 
 const SUBJECT_COLORS: Record<string, string> = {
@@ -56,11 +76,12 @@ export default function CourseDetailPage() {
         // Fetch topics for this subject
         const { data: topicRows } = await supabase
           .from('topics')
-          .select('name')
+          .select('id, name, order_index')
           .eq('subject_id', subjectRow.id)
           .order('order_index', { ascending: true })
 
-        const topics = (topicRows ?? []).map(t => t.name)
+        const topics: TopicInfo[] = (topicRows ?? []).map(t => ({ id: t.id, name: t.name, order_index: t.order_index ?? 0 }))
+        const topicNames = topics.map(t => t.name)
 
         // Fetch aggregated accuracy per topic from results
         const { data: resultRows } = await supabase
@@ -77,7 +98,7 @@ export default function CourseDetailPage() {
           perfMap.set(row.topic, existing)
         }
 
-        const perfData: TopicPerf[] = topics.map(topic => {
+        const perfData: TopicPerf[] = topicNames.map(topic => {
           const stats = perfMap.get(topic)
           return {
             topic,
@@ -88,6 +109,7 @@ export default function CourseDetailPage() {
         setCourse({
           name: subjectRow.name,
           subject: subjectRow.name.toUpperCase(),
+          slug: id,
           topics,
           color: SUBJECT_COLORS[subjectRow.name] ?? '#8083ff',
           perfData,
@@ -174,11 +196,13 @@ export default function CourseDetailPage() {
               <div style={{ fontWeight: 700, fontSize: '17px', marginBottom: '20px' }}>Konu Listesi</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {course.topics.map((topic, i) => {
-                  const perf = perfData.find(p => p.topic === topic)
+                  const perf = perfData.find(p => p.topic === topic.name)
                   const avg = perf?.avg ?? 0
+                  const tSlug = slugify(topic.name)
                   return (
                     <div
-                      key={topic}
+                      key={topic.id}
+                      onClick={() => router.push(`/courses/${course.slug}/${tSlug}`)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -188,6 +212,7 @@ export default function CourseDetailPage() {
                         background: 'rgba(255,255,255,0.03)',
                         border: '0.5px solid rgba(255,255,255,0.06)',
                         transition: 'background 150ms ease, border-color 150ms ease',
+                        cursor: 'pointer',
                       }}
                       onMouseEnter={e => {
                         e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
@@ -215,7 +240,7 @@ export default function CourseDetailPage() {
                         {i + 1}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 600, fontSize: '14px' }}>{topic}</div>
+                        <div style={{ fontWeight: 600, fontSize: '14px' }}>{topic.name}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '60px', height: '4px', borderRadius: '999px', background: 'var(--surface-mid)', overflow: 'hidden' }}>
@@ -224,6 +249,7 @@ export default function CourseDetailPage() {
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', fontWeight: 700, color: 'var(--color-muted)', minWidth: '28px', textAlign: 'right' }}>
                           {avg}%
                         </span>
+                        <span style={{ color: 'var(--color-accent)', fontSize: '11px', fontWeight: 600 }}>→</span>
                       </div>
                     </div>
                   )
