@@ -1,34 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
 import { createClient } from '@/lib/supabase-client'
 
-interface Subject {
-  label: string
-  topic: string
-  icon: string
-  color: string
-}
-
 type Role = 'student' | 'teacher' | 'parent'
-
-interface RoleOption {
-  id: Role
-  title: string
-  desc: string
-  icon: string
-}
-
-const ROLES: RoleOption[] = [
-  { id: 'student', title: 'Öğrenci', desc: 'Kişiselleştirilmiş öğrenme yolları ve adaptif testler.', icon: '\u{1F393}' },
-  { id: 'teacher', title: 'Öğretmen', desc: 'Gelişmiş analitik ve otomatik müfredat oluşturma.', icon: '\u{1F468}\u{200D}\u{1F3EB}' },
-  { id: 'parent', title: 'Veli', desc: 'Gerçek zamanlı ilerleme takibi ve performans içgörüleri.', icon: '\u{1F468}\u{200D}\u{1F469}\u{200D}\u{1F467}' },
-]
-
-const STEPS = ['Profil', 'Ders', 'Detaylar']
 
 const FEATURES = [
   {
@@ -130,12 +108,6 @@ const FAQ = [
 export default function LandingPage() {
   const router = useRouter()
   const supabase = createClient()
-  const onboardingRef = useRef<HTMLDivElement>(null)
-  const [subjects, setSubjects] = useState<Subject[]>([])
-  const [loadingSubjects, setLoadingSubjects] = useState(true)
-  const [selectedRole, setSelectedRole] = useState<Role>('student')
-  const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null)
-  const [studentName, setStudentName] = useState('')
   const [checkingAuth, setCheckingAuth] = useState(true)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
 
@@ -158,52 +130,6 @@ export default function LandingPage() {
     }
     checkAuth()
   }, [router, supabase])
-
-  useEffect(() => {
-    async function fetchSubjects() {
-      try {
-        const res = await fetch('/api/subjects')
-        if (!res.ok) throw new Error('Failed to fetch subjects')
-        const data: { subjects: Subject[] } = await res.json()
-        setSubjects(data.subjects)
-        if (data.subjects.length > 0) {
-          setSelectedSubject(data.subjects[0])
-        }
-      } catch {
-        // silently fail; page remains functional with empty subjects
-      } finally {
-        setLoadingSubjects(false)
-      }
-    }
-    fetchSubjects()
-  }, [])
-
-  function handleContinue() {
-    if (selectedRole === 'teacher') {
-      router.push('/teacher')
-      return
-    }
-    if (selectedRole === 'parent') {
-      router.push('/parent')
-      return
-    }
-    if (!studentName.trim()) return
-
-    const id = `stu_${Date.now()}`
-    localStorage.setItem('learntwin_student', JSON.stringify({ id, name: studentName.trim() }))
-    localStorage.setItem('learntwin_student_name', studentName.trim())
-    if (selectedSubject) {
-      localStorage.setItem(
-        'learntwin_subject',
-        JSON.stringify({ subject: selectedSubject.label, topic: selectedSubject.topic })
-      )
-    }
-    router.push('/student/session')
-  }
-
-  function scrollToOnboarding() {
-    onboardingRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
 
   return (
     <div
@@ -277,9 +203,9 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-wrap items-center justify-center" style={{ gap: '14px', marginBottom: '56px' }}>
-              <button className="btn-primary" onClick={scrollToOnboarding}>
+              <a href="/auth/signup" className="btn-primary" style={{ textDecoration: 'none' }}>
                 Ücretsiz Deneyin
-              </button>
+              </a>
               <a
                 href="#nasil-calisir"
                 className="btn-ghost"
@@ -689,311 +615,12 @@ export default function LandingPage() {
               >
                 Ücretsiz hesabınızı oluşturun, yapay zeka destekli öğrenme deneyimini hemen keşfedin.
               </p>
-              <button className="btn-primary" onClick={scrollToOnboarding}>
+              <a href="/auth/signup" className="btn-primary" style={{ textDecoration: 'none' }}>
                 Hemen Ücretsiz Başlayın
-              </button>
+              </a>
             </div>
           </section>
 
-          {/* ========== ONBOARDING FORM ========== */}
-          <section
-            ref={onboardingRef}
-            style={{ padding: '100px 20px', backgroundColor: 'var(--surface-low)' }}
-          >
-            <div className="container-dashboard" style={{ maxWidth: '900px', margin: '0 auto' }}>
-              <div className="text-center" style={{ marginBottom: '48px' }}>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-hanken)',
-                    fontSize: 'clamp(24px, 3.5vw, 36px)',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                    marginBottom: '12px',
-                    color: 'var(--color-text)',
-                  }}
-                >
-                  Hemen Başlayın
-                </h2>
-                <p style={{ color: 'var(--color-muted)', fontSize: '16px', maxWidth: '520px', margin: '0 auto', lineHeight: 1.7 }}>
-                  Rolünüzü seçin, dersinizi belirleyin ve kişiselleştirilmiş öğrenme deneyimine adım atın.
-                </p>
-              </div>
-
-              {/* Role Cards */}
-              <div
-                className="grid w-full gap-4"
-                style={{
-                  maxWidth: '900px',
-                  margin: '0 auto 48px',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-                }}
-              >
-                {ROLES.map((role) => (
-                  <div
-                    key={role.id}
-                    onClick={() => setSelectedRole(role.id)}
-                    className="glass-card"
-                    style={{
-                      padding: '24px',
-                      cursor: 'pointer',
-                      borderColor:
-                        selectedRole === role.id ? 'var(--color-accent)' : 'var(--border-subtle)',
-                      background:
-                        selectedRole === role.id
-                          ? 'rgba(128,131,255,0.06)'
-                          : 'var(--bg-card)',
-                    }}
-                  >
-                    <div style={{ fontSize: '22px', marginBottom: '14px' }}>{role.icon}</div>
-                    <div
-                      style={{
-                        fontFamily: 'var(--font-hanken)',
-                        fontWeight: 700,
-                        fontSize: '17px',
-                        marginBottom: '8px',
-                      }}
-                    >
-                      {role.title}
-                    </div>
-                    <div
-                      style={{
-                        color: 'var(--color-muted)',
-                        fontSize: '14px',
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      {role.desc}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Setup Card */}
-              <div className="glass-card fade-in w-full" style={{ maxWidth: '820px', margin: '0 auto', padding: '40px' }}>
-                {/* Step indicators */}
-                <div className="flex items-center" style={{ marginBottom: '40px' }}>
-                  {STEPS.map((step, i) => (
-                    <div
-                      key={step}
-                      className="flex items-center"
-                      style={{ flex: i < STEPS.length - 1 ? 1 : undefined }}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div
-                          className="flex items-center justify-center"
-                          style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '50%',
-                            background:
-                              i === 0 ? 'var(--color-accent-dim)' : 'rgba(255,255,255,0.05)',
-                            border:
-                              i === 0
-                                ? '1px solid var(--color-accent)'
-                                : '1px solid var(--border-subtle)',
-                            color: i === 0 ? 'var(--color-accent)' : 'var(--color-muted)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {i + 1}
-                        </div>
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            color: i === 0 ? 'var(--color-text)' : 'var(--color-muted)',
-                            fontFamily: 'var(--font-mono)',
-                            fontWeight: i === 0 ? 600 : 400,
-                          }}
-                        >
-                          {step}
-                        </span>
-                      </div>
-                      {i < STEPS.length - 1 && (
-                        <div
-                          className="flex-1"
-                          style={{
-                            height: '1px',
-                            background: 'var(--border-subtle)',
-                            margin: '0 16px',
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-hanken)',
-                    fontSize: '22px',
-                    fontWeight: 700,
-                    marginBottom: '6px',
-                  }}
-                >
-                  Ana Ders Seçin
-                </h2>
-                <p
-                  style={{
-                    color: 'var(--color-muted)',
-                    fontSize: '14px',
-                    marginBottom: '28px',
-                  }}
-                >
-                  İlk yapay zeka değerlendirmesi için odak alanı seçin.
-                </p>
-
-                {/* Subject Selector */}
-                {loadingSubjects ? (
-                  <div
-                    className="grid gap-3"
-                    style={{
-                      marginBottom: '32px',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                    }}
-                  >
-                    {[1, 2, 3].map((n) => (
-                      <div
-                        key={n}
-                        className="skeleton-shimmer"
-                        style={{ height: '96px', borderRadius: '8px' }}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    className="grid gap-3"
-                    style={{
-                      marginBottom: '32px',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                    }}
-                  >
-                    {subjects.map((sub) => (
-                      <div
-                        key={sub.label}
-                        onClick={() => setSelectedSubject(sub)}
-                        className="flex flex-col items-center justify-center text-center cursor-pointer"
-                        style={{
-                          border: `1px solid ${
-                            selectedSubject?.label === sub.label
-                              ? 'var(--color-accent)'
-                              : 'var(--border-subtle)'
-                          }`,
-                          background:
-                            selectedSubject?.label === sub.label
-                              ? 'var(--color-accent-dim)'
-                              : 'rgba(255,255,255,0.03)',
-                          borderRadius: '8px',
-                          padding: '20px 12px',
-                          transition: 'all 150ms ease',
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: '22px',
-                            marginBottom: '10px',
-                            color:
-                              selectedSubject?.label === sub.label
-                                ? 'var(--color-text)'
-                                : 'var(--color-muted)',
-                          }}
-                        >
-                          {sub.icon}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: '13px',
-                            fontWeight: 500,
-                            color:
-                              selectedSubject?.label === sub.label
-                                ? 'var(--color-text)'
-                                : 'var(--color-muted)',
-                          }}
-                        >
-                          {sub.label}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Student Name Input */}
-                <div style={{ marginBottom: '32px' }}>
-                  <label
-                    className="block uppercase"
-                    style={{
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      color: 'var(--color-muted)',
-                      letterSpacing: '0.08em',
-                      marginBottom: '8px',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  >
-                    TAM İSİM
-                  </label>
-                  <input
-                    type="text"
-                    value={studentName}
-                    onChange={(e) => setStudentName(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleContinue()}
-                    placeholder="Adınızı girin"
-                    className="input-field"
-                    style={{
-                      width: '100%',
-                      padding: '14px 16px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border-subtle)',
-                      background: 'var(--surface-lowest)',
-                      color: 'var(--color-text)',
-                      fontSize: '15px',
-                      outline: 'none',
-                      fontFamily: 'var(--font-inter)',
-                      transition: 'border-color 150ms ease',
-                    }}
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    className="btn-primary"
-                    onClick={handleContinue}
-                    disabled={selectedRole === 'student' && !studentName.trim()}
-                    style={{
-                      opacity: selectedRole === 'student' && !studentName.trim() ? 0.5 : 1,
-                    }}
-                  >
-                    Devam Et →
-                  </button>
-                </div>
-
-                <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '0.5px solid var(--border-subtle)', textAlign: 'center' }}>
-                  <p style={{ color: 'var(--color-muted)', fontSize: '14px', marginBottom: '16px' }}>
-                    Zaten hesabınız var mı?
-                  </p>
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-                    <a
-                      href="/auth/login"
-                      className="btn-outline"
-                      style={{ textDecoration: 'none', display: 'inline-flex' }}
-                    >
-                      Giriş Yap
-                    </a>
-                    <a
-                      href="/auth/signup"
-                      className="btn-primary"
-                      style={{ textDecoration: 'none', display: 'inline-flex' }}
-                    >
-                      Kaydol
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
         </main>
       )}
 
