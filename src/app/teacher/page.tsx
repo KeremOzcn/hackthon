@@ -20,38 +20,12 @@ interface SessionRow {
 
 const RISK_ORDER: Record<string, number> = { high: 0, medium: 1, low: 2 }
 
-type RiskFilter = 'all' | 'low' | 'medium' | 'high'
-type SubjectFilter = 'all' | 'Matematik' | 'Fen Bilimleri' | 'Türkçe'
-type SortBy = 'risk' | 'date' | 'accuracy'
-
-const RISK_LABELS: Record<RiskFilter, string> = {
-  all: 'Tümü',
-  low: 'Düşük',
-  medium: 'Orta',
-  high: 'Yüksek',
-}
-
-const SUBJECT_LABELS: Record<SubjectFilter, string> = {
-  all: 'Tüm Dersler',
-  Matematik: 'Matematik',
-  'Fen Bilimleri': 'Fen Bilimleri',
-  Türkçe: 'Türkçe',
-}
-
-const SORT_LABELS: Record<SortBy, string> = {
-  risk: 'Riske Göre',
-  date: 'Tarihe Göre',
-  accuracy: 'Başarıya Göre',
-}
 
 export default function TeacherPage() {
   const router = useRouter()
   const supabase = createClient()
   const [sessions, setSessions] = useState<SessionRow[]>([])
   const [loading, setLoading] = useState(true)
-  const [riskFilter, setRiskFilter] = useState<RiskFilter>('all')
-  const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>('all')
-  const [sortBy, setSortBy] = useState<SortBy>('risk')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set())
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -103,23 +77,8 @@ export default function TeacherPage() {
   const pendingTasks = sessions.filter(s => s.risk_level !== 'low').length
   const attentionRequired = sessions.filter(s => s.risk_level === 'high' || s.risk_level === 'medium')
 
-  const filteredSessions = sessions.filter(s => {
-    if (riskFilter !== 'all' && s.risk_level !== riskFilter) return false
-    if (subjectFilter !== 'all' && s.subject !== subjectFilter) return false
-    return true
-  })
-
-  const sortedSessions = [...filteredSessions].sort((a, b) => {
-    if (sortBy === 'risk') {
-      return (RISK_ORDER[a.risk_level] ?? 3) - (RISK_ORDER[b.risk_level] ?? 3)
-    }
-    if (sortBy === 'date') {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    }
-    if (sortBy === 'accuracy') {
-      return b.accuracy - a.accuracy
-    }
-    return 0
+  const sortedSessions = [...sessions].sort((a, b) => {
+    return (RISK_ORDER[a.risk_level] ?? 3) - (RISK_ORDER[b.risk_level] ?? 3)
   })
 
   const allFilteredSelected = sortedSessions.length > 0 && sortedSessions.every(s => selectedIds.has(s.id))
@@ -203,75 +162,6 @@ export default function TeacherPage() {
                 <p style={{ color: 'var(--color-muted)', fontSize: '12px', lineHeight: 1.6 }}>{kpi.desc}</p>
               </div>
             ))}
-          </div>
-
-          {/* Filters & Sort */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {(Object.keys(RISK_LABELS) as RiskFilter[]).map(key => (
-                <button
-                  key={key}
-                  onClick={() => setRiskFilter(key)}
-                  className={riskFilter === key ? 'glass-card' : ''}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    border: '1px solid var(--border-subtle)',
-                    background: riskFilter === key ? 'rgba(99,102,241,0.12)' : 'transparent',
-                    color: riskFilter === key ? '#a5b4fc' : 'var(--color-muted)',
-                  }}
-                >
-                  {RISK_LABELS[key]}
-                </button>
-              ))}
-            </div>
-            <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {(Object.keys(SUBJECT_LABELS) as SubjectFilter[]).map(key => (
-                <button
-                  key={key}
-                  onClick={() => setSubjectFilter(key)}
-                  className={subjectFilter === key ? 'glass-card' : ''}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    border: '1px solid var(--border-subtle)',
-                    background: subjectFilter === key ? 'rgba(99,102,241,0.12)' : 'transparent',
-                    color: subjectFilter === key ? '#a5b4fc' : 'var(--color-muted)',
-                  }}
-                >
-                  {SUBJECT_LABELS[key]}
-                </button>
-              ))}
-            </div>
-            <div style={{ width: '1px', height: '20px', background: 'var(--border-subtle)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              {(Object.keys(SORT_LABELS) as SortBy[]).map(key => (
-                <button
-                  key={key}
-                  onClick={() => setSortBy(key)}
-                  className={sortBy === key ? 'glass-card' : ''}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    border: '1px solid var(--border-subtle)',
-                    background: sortBy === key ? 'rgba(99,102,241,0.12)' : 'transparent',
-                    color: sortBy === key ? '#a5b4fc' : 'var(--color-muted)',
-                  }}
-                >
-                  {SORT_LABELS[key]}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Attention Required */}
@@ -470,7 +360,7 @@ export default function TeacherPage() {
               ))}
               {sortedSessions.length === 0 && !loading && (
                 <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-muted)', fontSize: '14px' }}>
-                  Filtrelere uygun öğrenci bulunamadı.
+                  Henüz öğrenci verisi yok.
                 </div>
               )}
             </div>
