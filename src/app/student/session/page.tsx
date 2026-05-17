@@ -48,6 +48,12 @@ export default function SessionPage() {
 
   useEffect(() => {
     async function loadUser() {
+      const isDemoStudent = document.cookie.includes('demo_auth=true') && document.cookie.includes('demo_role=student')
+      if (isDemoStudent) {
+        setUser({ id: 'demo-student', name: 'Demo Öğrenci' })
+        return
+      }
+
       const { data: { user: authUser } } = await supabase.auth.getUser()
       if (!authUser) { router.push('/auth/login'); return }
       const name = authUser.user_metadata?.full_name as string || authUser.email?.split('@')[0] || 'Öğrenci'

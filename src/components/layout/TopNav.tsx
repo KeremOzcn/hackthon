@@ -2,16 +2,25 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase-client'
 
-type NavItem = 'dashboard' | 'courses' | 'analytics'
+type NavItem = 'dashboard' | 'courses' | 'analytics' | 'history' | 'achievements'
+type UserRole = 'student' | 'teacher' | 'parent'
 
 interface TopNavProps {
   active?: NavItem
+  role?: UserRole
 }
 
-const NAV_LINKS: { key: NavItem; label: string; href: string }[] = [
-  { key: 'dashboard', label: 'Panel', href: '/teacher' },
-  { key: 'courses',   label: 'Dersler',   href: '/courses' },
-  { key: 'analytics', label: 'Analitik', href: '/teacher/analytics' },
+const TEACHER_NAV: { key: NavItem; label: string; href: string }[] = [
+  { key: 'dashboard',  label: 'Panel',     href: '/teacher' },
+  { key: 'courses',    label: 'Dersler',   href: '/courses' },
+  { key: 'analytics', label: 'Analitik',  href: '/teacher/analytics' },
+]
+
+const STUDENT_NAV: { key: NavItem; label: string; href: string }[] = [
+  { key: 'dashboard',    label: 'Panel',      href: '/student' },
+  { key: 'history',      label: 'Geçmiş',     href: '/student/history' },
+  { key: 'achievements', label: 'Başarımlar', href: '/student/achievements' },
+  { key: 'courses',      label: 'Dersler',    href: '/courses' },
 ]
 
 function isDemoMode(): boolean {
@@ -19,7 +28,9 @@ function isDemoMode(): boolean {
   return document.cookie.includes('demo_auth=true')
 }
 
-export function TopNav({ active }: TopNavProps) {
+export function TopNav({ active, role: roleProp }: TopNavProps) {
+  const [detectedRole, setDetectedRole] = useState<UserRole>('teacher')
+  const NAV_LINKS = (roleProp ?? detectedRole) === 'student' ? STUDENT_NAV : TEACHER_NAV
   const [userName, setUserName] = useState('')
   const [showMenu, setShowMenu] = useState(false)
   const [showMobileNav, setShowMobileNav] = useState(false)
@@ -27,13 +38,24 @@ export function TopNav({ active }: TopNavProps) {
 
   useEffect(() => {
     setDemo(isDemoMode())
+
+    if (typeof document !== 'undefined' && document.cookie.includes('demo_role=student')) {
+      setDetectedRole('student')
+      return
+    }
+
     async function loadUser() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const name = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'K'
-        setUserName(name)
-      }
+      if (!user) return
+      const name = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'K'
+      setUserName(name)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+      if (profile?.role) setDetectedRole(profile.role as UserRole)
     }
     loadUser()
   }, [])
@@ -45,6 +67,7 @@ export function TopNav({ active }: TopNavProps) {
   async function handleLogout() {
     if (demo) {
       document.cookie = 'demo_auth=; path=/; max-age=0'
+      document.cookie = 'demo_role=; path=/; max-age=0'
     }
     const supabase = createClient()
     await supabase.auth.signOut()

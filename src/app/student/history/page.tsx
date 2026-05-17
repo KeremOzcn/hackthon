@@ -43,6 +43,9 @@ export default function HistoryPage() {
 
   useEffect(() => {
     async function load() {
+      const isDemoStudent = document.cookie.includes('demo_auth=true') && document.cookie.includes('demo_role=student')
+      if (isDemoStudent) { setSessions([]); setLoading(false); return }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
 
@@ -75,7 +78,7 @@ export default function HistoryPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <TopNav active="analytics" />
+      <TopNav active="history" role="student" />
 
       <main style={{ flex: 1, padding: '48px 20px' }}>
         <div style={{ width: '100%', maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
