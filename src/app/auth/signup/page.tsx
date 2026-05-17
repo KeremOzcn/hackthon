@@ -78,17 +78,27 @@ export default function SignupPage() {
       email: DEMO_EMAIL,
       password: DEMO_PASSWORD,
       options: {
-        data: {
-          full_name: DEMO_FULL_NAME,
-          role: 'teacher',
-        },
+        data: { full_name: DEMO_FULL_NAME, role: 'teacher' },
       },
     })
 
     if (signUpError) {
-      setError(signUpError.message === 'User already registered'
-        ? 'Bu demo hesap zaten kayıtlı. Giriş sayfasından demo girişini deneyin.'
-        : 'Kayıt olurken bir hata oluştu.')
+      if (signUpError.message === 'User already registered') {
+        // Already exists — sign in directly
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: DEMO_EMAIL,
+          password: DEMO_PASSWORD,
+        })
+        if (signInError) {
+          setError('Demo girişi yapılamadı.')
+          setLoading(false)
+          return
+        }
+        router.refresh()
+        router.push('/')
+        return
+      }
+      setError('Kayıt olurken bir hata oluştu.')
       setLoading(false)
       return
     }
