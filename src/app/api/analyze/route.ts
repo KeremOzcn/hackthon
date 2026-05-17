@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { supabase } from '@/lib/supabase'
 import { computeAchievements } from '@/lib/gamification'
 import type { Answer, LearningTwinResult } from '@/types'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' })
 
 interface RequestBody {
   student: { id: string; name: string }
@@ -80,12 +81,8 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
 }`
 
   try {
-    const [message, { data: prevSessions }] = await Promise.all([
-      client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
-      }),
+    const [geminiResult, { data: prevSessions }] = await Promise.all([
+      model.generateContent(prompt),
       supabase
         .from('learning_twin_results')
         .select('subject, accuracy, created_at')
@@ -93,12 +90,12 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
         .order('created_at', { ascending: false }),
     ])
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    const raw = geminiResult.response.text()
     let analysis: any
     try {
-      analysis = JSON.parse(raw)
+      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      analysis = JSON.parse(cleaned)
     } catch {
-      // Fallback: find the first top-level JSON object without the 's' flag (ES2018)
       const match = raw.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
       if (!match) throw new Error('No JSON in response')
       analysis = JSON.parse(match[0])
