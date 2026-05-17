@@ -85,6 +85,9 @@ export default function AchievementsPage() {
 
   useEffect(() => {
     async function load() {
+      const isDemoStudent = document.cookie.includes('demo_auth=true') && document.cookie.includes('demo_role=student')
+      if (isDemoStudent) { setStudentName('Demo Öğrenci'); setSessions([]); setLoading(false); return }
+
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth/login'); return }
       const name = user.user_metadata?.full_name as string || user.email?.split('@')[0] || 'Öğrenci'
@@ -139,7 +142,7 @@ export default function AchievementsPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <TopNav active="analytics" />
+      <TopNav active="achievements" role="student" />
 
       <main style={{ flex: 1, padding: '48px 20px' }}>
         <div style={{ width: '100%', maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>

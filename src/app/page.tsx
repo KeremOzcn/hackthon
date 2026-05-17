@@ -151,7 +151,7 @@ export default function LandingPage() {
         const role = profile?.role as Role
         if (role === 'teacher') router.push('/teacher')
         else if (role === 'parent') router.push('/parent')
-        else router.push('/student/session')
+        else router.push('/student')
         return
       }
       setCheckingAuth(false)

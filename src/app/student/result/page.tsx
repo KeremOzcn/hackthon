@@ -86,7 +86,7 @@ export default function ResultPage() {
   if ('error' in result) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-        <TopNav active="analytics" />
+        <TopNav active="dashboard" role="student" />
         <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="glass-card" style={{ padding: '40px', textAlign: 'center', maxWidth: '400px' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
@@ -111,7 +111,7 @@ export default function ResultPage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <TopNav active="analytics" />
+      <TopNav active="dashboard" role="student" />
 
       <main style={{ flex: 1, padding: '48px 20px' }}>
         <div style={{ width: '100%', maxWidth: '760px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>

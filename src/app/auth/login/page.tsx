@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase-client'
 
-const DEMO_EMAIL = 'demo@learntwin.ai'
+const DEMO_TEACHER_EMAIL = 'demo@learntwin.ai'
+const DEMO_STUDENT_EMAIL = 'demo.student@learntwin.ai'
 const DEMO_PASSWORD = 'demo123'
 
 export default function LoginPage() {
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [demoLoading, setDemoLoading] = useState<'teacher' | 'student' | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -37,13 +39,12 @@ export default function LoginPage() {
     router.push('/')
   }
 
-  async function handleDemoLogin() {
+  async function handleDemoTeacherLogin() {
     setError('')
-    setLoading(true)
+    setDemoLoading('teacher')
 
-    // Try real login first
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: DEMO_EMAIL,
+      email: DEMO_TEACHER_EMAIL,
       password: DEMO_PASSWORD,
     })
 
@@ -53,8 +54,25 @@ export default function LoginPage() {
       return
     }
 
-    // Fall back to demo session cookie bypass
     window.location.href = '/api/demo-session'
+  }
+
+  async function handleDemoStudentLogin() {
+    setError('')
+    setDemoLoading('student')
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: DEMO_STUDENT_EMAIL,
+      password: DEMO_PASSWORD,
+    })
+
+    if (!signInError) {
+      router.refresh()
+      router.push('/')
+      return
+    }
+
+    window.location.href = '/api/demo-session-student'
   }
 
   return (
@@ -127,28 +145,37 @@ export default function LoginPage() {
         {/* Demo section */}
         <div
           className="elevated-card"
-          style={{ padding: '16px', marginTop: '20px', textAlign: 'center' }}
+          style={{ padding: '16px', marginTop: '20px' }}
         >
-          <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginBottom: '10px' }}>
-            Hızlı Demo
+          <div style={{ fontSize: '12px', color: 'var(--color-muted)', marginBottom: '12px', textAlign: 'center' }}>
+            Hızlı Demo — şifre: <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--on-surface-variant)' }}>{DEMO_PASSWORD}</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '12px' }}>
-            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
-              <span style={{ color: 'var(--color-muted)' }}>E-posta:</span> {DEMO_EMAIL}
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--on-surface-variant)' }}>
-              <span style={{ color: 'var(--color-muted)' }}>Şifre:</span> {DEMO_PASSWORD}
-            </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              type="button"
+              onClick={handleDemoTeacherLogin}
+              disabled={loading || demoLoading !== null}
+              className="btn-ghost"
+              style={{ flex: 1, justifyContent: 'center', flexDirection: 'column', gap: '4px', padding: '12px 8px' }}
+            >
+              <span style={{ fontSize: '18px' }}>👨‍🏫</span>
+              <span style={{ fontSize: '12px', fontWeight: 700 }}>
+                {demoLoading === 'teacher' ? '...' : 'Öğretmen'}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDemoStudentLogin}
+              disabled={loading || demoLoading !== null}
+              className="btn-ghost"
+              style={{ flex: 1, justifyContent: 'center', flexDirection: 'column', gap: '4px', padding: '12px 8px' }}
+            >
+              <span style={{ fontSize: '18px' }}>🎓</span>
+              <span style={{ fontSize: '12px', fontWeight: 700 }}>
+                {demoLoading === 'student' ? '...' : 'Öğrenci'}
+              </span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            disabled={loading}
-            className="btn-ghost"
-            style={{ width: '100%', justifyContent: 'center' }}
-          >
-            {loading ? 'Giriş yapılıyor...' : 'Demo Girişi'}
-          </button>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '13px', color: 'var(--color-muted)' }}>
