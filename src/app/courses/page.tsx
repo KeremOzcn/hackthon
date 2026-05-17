@@ -1,11 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { TopNav } from '@/components/layout/TopNav'
 import { Footer } from '@/components/layout/Footer'
+import { createClient } from '@/lib/supabase-client'
 
 interface Course {
-  id: string
+  slug: string
   name: string
   subject: string
   description: string
@@ -13,35 +15,47 @@ interface Course {
   color: string
 }
 
-const COURSES: Course[] = [
-  {
-    id: 'matematik',
-    name: 'Matematik',
-    subject: 'İLERİ MATEMATİK',
-    description: 'Turev, integral, limitler ve olasilik konularini kapsayan kapsamli matematik programi.',
-    topics: 7,
-    color: '#8083ff',
-  },
-  {
-    id: 'fen-bilimleri',
-    name: 'Fen Bilimleri',
-    subject: 'FEN BİLİMLERİ',
-    description: 'Fizik, kimya ve biyoloji temellerini birlestiren disiplinler arasi bilim programi.',
-    topics: 5,
-    color: '#10b981',
-  },
-  {
-    id: 'turkce',
-    name: 'Turkce',
-    subject: 'TÜRKÇE',
-    description: 'Dil bilgisi, paragraf analizi ve anlatim bozuklugu konularini iceren dil programi.',
-    topics: 5,
-    color: '#f59e0b',
-  },
-]
-
 export default function CoursesPage() {
   const router = useRouter()
+  const supabase = createClient()
+  const [courses, setCourses] = useState<Course[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      try {
+        const { data: subjects } = await supabase
+          .from('subjects')
+          .select('id, slug, name, color, description')
+
+        const { data: topicRows } = await supabase
+          .from('topics')
+          .select('subject_id')
+
+        const topicCountMap = new Map<string, number>()
+        for (const t of (topicRows ?? [])) {
+          topicCountMap.set(t.subject_id, (topicCountMap.get(t.subject_id) || 0) + 1)
+        }
+
+        const built: Course[] = (subjects ?? []).map((s) => ({
+          slug: s.slug,
+          name: s.name,
+          subject: s.name.toUpperCase(),
+          description: s.description,
+          topics: topicCountMap.get(s.id) ?? 0,
+          color: s.color,
+        }))
+
+        setCourses(built)
+      } catch {
+        setCourses([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -61,38 +75,44 @@ export default function CoursesPage() {
           </div>
 
           {/* Course cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-            {COURSES.map(course => (
-              <div
-                key={course.id}
-                className="glass-card"
-                style={{ padding: '28px', borderTop: `2px solid ${course.color}`, cursor: 'pointer' }}
-                onClick={() => router.push(`/courses/${course.id}`)}
-              >
-                <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: course.color, letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px', textTransform: 'uppercase' }}>
-                    {course.subject}
+          {loading ? (
+            <div className="glass-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--color-muted)' }}>
+              Yükleniyor...
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              {courses.map(course => (
+                <div
+                  key={course.slug}
+                  className="glass-card"
+                  style={{ padding: '28px', borderTop: `2px solid ${course.color}`, cursor: 'pointer' }}
+                  onClick={() => router.push(`/courses/${course.slug}`)}
+                >
+                  <div style={{ marginBottom: '16px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 700, color: course.color, letterSpacing: '0.08em', fontFamily: 'var(--font-mono)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                      {course.subject}
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: '22px', marginBottom: '8px', fontFamily: 'var(--font-hanken)' }}>
+                      {course.name}
+                    </div>
+                    <p style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
+                      {course.description}
+                    </p>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: '22px', marginBottom: '8px', fontFamily: 'var(--font-hanken)' }}>
-                    {course.name}
-                  </div>
-                  <p style={{ color: 'var(--color-muted)', fontSize: '14px', lineHeight: 1.6, margin: 0 }}>
-                    {course.description}
-                  </p>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--color-muted)' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text)' }}>{course.topics}</span>
-                    <span>Konu</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--color-muted)' }}>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-text)' }}>{course.topics}</span>
+                      <span>Konu</span>
+                    </div>
+                    <span style={{ color: 'var(--color-accent)', fontSize: '13px', fontWeight: 600 }}>
+                      Incele →
+                    </span>
                   </div>
-                  <span style={{ color: 'var(--color-accent)', fontSize: '13px', fontWeight: 600 }}>
-                    Incele →
-                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
         </div>
       </main>

@@ -53,6 +53,10 @@ export default function TeacherPage() {
   const [subjectFilter, setSubjectFilter] = useState<SubjectFilter>('all')
   const [sortBy, setSortBy] = useState<SortBy>('risk')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [approvedIds, setApprovedIds] = useState<Set<string>>(new Set())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editText, setEditText] = useState('')
+  const [showPrintReport, setShowPrintReport] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -274,7 +278,7 @@ export default function TeacherPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
               <h2 style={{ fontWeight: 700, fontSize: '20px' }}>Dikkat Gereken</h2>
-              <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)', fontSize: '13px', fontWeight: 600 }}>
+              <button onClick={() => router.push('/teacher/analytics')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent)', fontSize: '13px', fontWeight: 600 }}>
                 TÜMÜNÜ GÖR →
               </button>
             </div>
@@ -285,6 +289,8 @@ export default function TeacherPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {attentionRequired.map(s => {
                   const riskColor = s.risk_level === 'high' ? '#f43f5e' : '#f59e0b'
+                  const isApproved = approvedIds.has(s.id) || s.teacher_action.includes('[Onaylandı')
+                  const isEditing = editingId === s.id
                   return (
                     <div key={s.id} className="glass-card" style={{ borderLeft: `3px solid ${riskColor}`, overflow: 'hidden' }}>
                       <div style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -315,17 +321,94 @@ export default function TeacherPage() {
                         <div style={{ fontSize: '10px', fontWeight: 700, color: '#a5b4fc', letterSpacing: '0.06em', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
                           🤖 YAPAY ZEKA MÜDAHALE ÖNERİSİ
                         </div>
-                        <p style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--color-muted)', marginBottom: '14px' }}>
-                          {s.student_name} için öneri: {s.teacher_action}
-                        </p>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          <button className="btn-primary" style={{ fontSize: '12px', padding: '8px 16px' }}>
-                            ONAYLA VE ATA
-                          </button>
-                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '12px', fontWeight: 600 }}>
-                            ÖNERİYİ DÜZENLE
-                          </button>
-                        </div>
+                        {isEditing ? (
+                          <>
+                            <textarea
+                              value={editText}
+                              onChange={e => setEditText(e.target.value)}
+                              style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                borderRadius: '8px',
+                                border: '0.5px solid var(--border-highlight)',
+                                background: 'rgba(255,255,255,0.04)',
+                                color: 'var(--color-text)',
+                                fontSize: '13px',
+                                lineHeight: 1.6,
+                                marginBottom: '12px',
+                                outline: 'none',
+                                resize: 'vertical',
+                                minHeight: '80px',
+                              }}
+                            />
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <button
+                                className="btn-primary"
+                                style={{ fontSize: '12px', padding: '8px 16px' }}
+                                onClick={async () => {
+                                  await supabase.from('learning_twin_results').update({ teacher_action: editText }).eq('id', s.id)
+                                  setSessions(prev => prev.map(row => row.id === s.id ? { ...row, teacher_action: editText } : row))
+                                  setEditingId(null)
+                                }}
+                              >
+                                KAYDET
+                              </button>
+                              <button
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '12px', fontWeight: 600 }}
+                                onClick={() => setEditingId(null)}
+                              >
+                                İPTAL
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <p style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--color-muted)', marginBottom: '14px' }}>
+                              {s.student_name} için öneri: {s.teacher_action}
+                            </p>
+                            {isApproved ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: 700,
+                                  color: '#10b981',
+                                  letterSpacing: '0.06em',
+                                  fontFamily: 'var(--font-mono)',
+                                  padding: '6px 12px',
+                                  borderRadius: '6px',
+                                  background: 'rgba(16,185,129,0.12)',
+                                  border: '1px solid rgba(16,185,129,0.3)',
+                                }}>
+                                  ✓ ONAYLANDI
+                                </span>
+                              </div>
+                            ) : (
+                              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <button
+                                  className="btn-primary"
+                                  style={{ fontSize: '12px', padding: '8px 16px' }}
+                                  onClick={async () => {
+                                    const approvedText = `${s.teacher_action} [Onaylandı: ${new Date().toLocaleDateString('tr-TR')}]`
+                                    await supabase.from('learning_twin_results').update({ teacher_action: approvedText }).eq('id', s.id)
+                                    setSessions(prev => prev.map(row => row.id === s.id ? { ...row, teacher_action: approvedText } : row))
+                                    setApprovedIds(prev => new Set(prev).add(s.id))
+                                  }}
+                                >
+                                  ONAYLA VE ATA
+                                </button>
+                                <button
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-muted)', fontSize: '12px', fontWeight: 600 }}
+                                  onClick={() => {
+                                    setEditingId(s.id)
+                                    setEditText(s.teacher_action)
+                                  }}
+                                >
+                                  ÖNERİYİ DÜZENLE
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   )
@@ -421,7 +504,21 @@ export default function TeacherPage() {
             {selectedCount} öğrenci seçildi
           </span>
           <button
-            onClick={() => alert('PDF export coming soon')}
+            onClick={() => {
+              if (selectedCount === 0) {
+                alert('Lütfen rapor almak için en az bir öğrenci seçin.')
+                return
+              }
+              setShowPrintReport(true)
+              setTimeout(() => {
+                window.print()
+                const handler = () => {
+                  setShowPrintReport(false)
+                  window.removeEventListener('afterprint', handler)
+                }
+                window.addEventListener('afterprint', handler)
+              }, 300)
+            }}
             style={{
               fontSize: '13px',
               fontWeight: 600,
@@ -435,6 +532,55 @@ export default function TeacherPage() {
           >
             PDF Raporu Al
           </button>
+        </div>
+      )}
+
+      {/* Print-only report overlay */}
+      {showPrintReport && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: '#fff',
+            color: '#000',
+            padding: '40px',
+            overflow: 'auto',
+            display: 'none',
+          }}
+          className="print-only-report"
+        >
+          <style>{"@media print { .print-only-report { display: block !important; } }"}</style>
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px', color: '#000' }}>Öğrenci Raporu</h1>
+            <p style={{ fontSize: '13px', color: '#555', marginBottom: '24px' }}>
+              Tarih: {new Date().toLocaleDateString('tr-TR')}
+            </p>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <thead>
+                <tr>
+                  {['Öğrenci', 'Twin Tipi', 'Başarı', 'Risk', 'Ders', 'Müdahale Önerisi'].map(h => (
+                    <th key={h} style={{ borderBottom: '2px solid #000', padding: '10px 8px', textAlign: 'left', fontWeight: 700 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sessions.filter(s => selectedIds.has(s.id)).map(s => (
+                  <tr key={s.id}>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px 8px' }}>{s.student_name}</td>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px 8px' }}>{s.twin_type}</td>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px 8px' }}>{s.accuracy}%</td>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px 8px' }}>{s.risk_level === 'high' ? 'Yüksek' : s.risk_level === 'medium' ? 'Orta' : 'Düşük'}</td>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px 8px' }}>{s.subject}</td>
+                    <td style={{ borderBottom: '1px solid #ddd', padding: '10px 8px', maxWidth: '300px' }}>{s.teacher_action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ marginTop: '32px', textAlign: 'center', fontSize: '11px', color: '#888' }}>
+              İşler LearnTwin AI — Öğretmen Paneli Raporu
+            </div>
+          </div>
         </div>
       )}
     </div>
