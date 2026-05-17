@@ -46,6 +46,7 @@ const SUBJECT_COLORS: Record<string, string> = {
   Matematik: '#8083ff',
   'Fen Bilimleri': '#10b981',
   Türkçe: '#f59e0b',
+  'Sosyal Bilimler': '#f43f5e',
 }
 
 export default function CourseDetailPage() {
