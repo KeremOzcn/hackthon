@@ -20,6 +20,8 @@ interface ParentData {
   subject: string
   topic: string
   dominant_pattern: string
+  class_grade?: string
+  profile_id?: string
 }
 
 function toLearningTwinResult(d: ParentData): LearningTwinResult {
@@ -59,9 +61,34 @@ export default function ParentPage() {
 
   useEffect(() => {
     async function load() {
+      const isDemoParent = document.cookie.includes('demo_auth=true') && document.cookie.includes('demo_role=parent')
+      if (isDemoParent) {
+        setAllData([])
+        setSelectedStudent(null)
+        setLoading(false)
+        return
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth/login'); return }
+
+      const { data: links } = await supabase
+        .from('parent_students')
+        .select('student_id')
+        .eq('parent_id', user.id)
+
+      const studentIds = links?.map((l: { student_id: string }) => l.student_id) ?? []
+      if (studentIds.length === 0) {
+        setAllData([])
+        setSelectedStudent(null)
+        setLoading(false)
+        return
+      }
+
       const { data: rows } = await supabase
         .from('learning_twin_results')
-        .select('student_name, twin_type, risk_level, accuracy, parent_message, next_best_action, subject, topic, created_at, dominant_pattern')
+        .select('student_name, twin_type, risk_level, accuracy, parent_message, next_best_action, subject, topic, created_at, dominant_pattern, class_grade, profile_id')
+        .in('profile_id', studentIds)
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -76,7 +103,7 @@ export default function ParentPage() {
       setLoading(false)
     }
     load()
-  }, [])
+  }, [router, supabase])
 
   const grouped = useMemo(() => {
     const map = new Map<string, ParentData[]>()
@@ -234,7 +261,9 @@ export default function ParentPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: '18px', marginBottom: '4px' }}>{d.student_name}</div>
-                  <div style={{ color: 'var(--color-muted)', fontSize: '13px' }}>10. Sınıf &bull; Son 30 Günde Aktif</div>
+                  <div style={{ color: 'var(--color-muted)', fontSize: '13px' }}>
+                    {d.class_grade ? `${d.class_grade} • Son 30 Günde Aktif` : 'Son 30 Günde Aktif'}
+                  </div>
                 </div>
                 <span className={`badge badge-${d.risk_level}`}>
                   {d.risk_level === 'low' ? 'Düşük Risk' : d.risk_level === 'medium' ? 'Orta Risk' : 'Yüksek Risk'}

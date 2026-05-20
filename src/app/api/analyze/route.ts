@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { supabase } from '@/lib/supabase'
 import { computeAchievements } from '@/lib/gamification'
 import type { Answer, LearningTwinResult } from '@/types'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 interface RequestBody {
   student: { id: string; name: string }
@@ -28,7 +26,11 @@ function computeStats(answers: Answer[]) {
 }
 
 function sanitizeForPrompt(text: string): string {
-  return text.replace(/[`{}]/g, '')
+  return text
+    .replace(/[\r\n]+/g, ' ')
+    .replace(/[`{}\\"]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 export async function POST(req: NextRequest) {
@@ -40,6 +42,20 @@ export async function POST(req: NextRequest) {
   }
 
   const { student, subject, topic, answers, classInfo } = body
+
+  if (!student || typeof student.id !== 'string' || !student.id || typeof student.name !== 'string' || !student.name) {
+    return NextResponse.json({ error: 'Missing or invalid student fields' }, { status: 400 })
+  }
+  if (!subject || typeof subject !== 'string') {
+    return NextResponse.json({ error: 'Missing or invalid subject' }, { status: 400 })
+  }
+  if (!topic || typeof topic !== 'string') {
+    return NextResponse.json({ error: 'Missing or invalid topic' }, { status: 400 })
+  }
+  if (!Array.isArray(answers) || answers.length < 1 || answers.length > 10) {
+    return NextResponse.json({ error: 'answers must be an array with 1-10 items' }, { status: 400 })
+  }
+
   const stats = computeStats(answers)
 
   const safeSubject = sanitizeForPrompt(subject)
@@ -56,7 +72,7 @@ Toplam ipucu kullanımı: ${stats.hintsUsed}
 Yüksek eminlikle yanlış: ${stats.highConfidenceWrong}
 
 Soru detayları:
-${answers.map((a, i) => `Soru ${i + 1}: ${a.isCorrect ? '✓ Doğru' : '✗ Yanlış'} | Süre: ${a.timeSpentSeconds}s | Eminlik: ${a.confidence} | İpucu: ${a.hintLevelUsed} | Düşünce: "${sanitizeForPrompt(a.studentReasoning || '(yok)')}"`).join('\n')}
+${answers.map((a, i) => `Soru ${i + 1}: ${a.isCorrect ? '✓ Doğru' : '✗ Yanlış'} | Süre: ${a.timeSpentSeconds}s | Eminlik: ${sanitizeForPrompt(String(a.confidence ?? ''))} | İpucu: ${a.hintLevelUsed} | Düşünce: "${sanitizeForPrompt(String(a.studentReasoning ?? '')) || '(yok)'}"`).join('\n')}
 
 5 Learning Twin tipi:
 1. "Hızlı ama Dikkatsiz" - Hızlı çözüyor, kolay sorularda hata yapıyor, yüksek eminlikle yanlış yapıyor
@@ -80,25 +96,48 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
 }`
 
   try {
-    const [message, { data: prevSessions }] = await Promise.all([
-      client.messages.create({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        messages: [{ role: 'user', content: prompt }],
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ error: 'AI service not configured' }, { status: 500 })
+    }
+    const genAI = new GoogleGenerativeAI(apiKey)
+
+    const isDemo = student.id === 'demo-student'
+
+    const [geminiOutcome, supabaseOutcome] = await Promise.allSettled([
+      genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
       }),
-      supabase
-        .from('learning_twin_results')
-        .select('subject, accuracy, created_at')
-        .eq('profile_id', student.id)
-        .order('created_at', { ascending: false }),
+      isDemo
+        ? supabase
+            .from('learning_twin_results')
+            .select('subject, accuracy, created_at')
+            .eq('student_id', student.id)
+            .order('created_at', { ascending: false })
+        : supabase
+            .from('learning_twin_results')
+            .select('subject, accuracy, created_at')
+            .eq('profile_id', student.id)
+            .order('created_at', { ascending: false }),
     ])
 
-    const raw = message.content[0].type === 'text' ? message.content[0].text : ''
+    if (geminiOutcome.status === 'rejected') {
+      throw geminiOutcome.reason
+    }
+    const geminiResponse = geminiOutcome.value
+
+    let prevSessions: any[] = []
+    if (supabaseOutcome.status === 'fulfilled') {
+      prevSessions = supabaseOutcome.value.data || []
+    } else {
+      console.error('Failed to fetch previous sessions:', supabaseOutcome.reason)
+    }
+
+    const raw = geminiResponse.response.text()
     let analysis: any
     try {
       analysis = JSON.parse(raw)
     } catch {
-      // Fallback: find the first top-level JSON object without the 's' flag (ES2018)
       const match = raw.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
       if (!match) throw new Error('No JSON in response')
       analysis = JSON.parse(match[0])
@@ -115,7 +154,7 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
     const { error: insertError } = await supabase.from('learning_twin_results').insert({
       student_id: student.id,
       student_name: student.name,
-      profile_id: student.id,
+      profile_id: isDemo ? null : student.id,
       class_id: classInfo?.id ?? null,
       class_name: classInfo?.name ?? null,
       class_grade: classInfo?.grade ?? null,

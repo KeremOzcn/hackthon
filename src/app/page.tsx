@@ -88,7 +88,7 @@ const STATS = [
 
 const TESTIMONIALS = [
   {
-    quote: 'LearnTwin AI sayesinde öğrencilerimin güçlü ve zayıf yönlerini çok net görebiliyorum. Ders planlamam yarı zamana indi.',
+    quote: 'İşleyen sayesinde öğrencilerimin güçlü ve zayıf yönlerini çok net görebiliyorum. Ders planlamam yarı zamana indi.',
     name: 'Ayşe Yılmaz',
     role: 'Matematik Öğretmeni, Ankara',
   },
@@ -106,7 +106,7 @@ const TESTIMONIALS = [
 
 const FAQ = [
   {
-    q: 'LearnTwin AI hangi sınıf seviyelerini destekliyor?',
+    q: 'İşleyen hangi sınıf seviyelerini destekliyor?',
     a: 'Şu an ortaokul ve lise seviyelerindeki öğrenciler için MEB müfredatına uygun içerik sunuyoruz. İlkokul ve üniversite hazırlık modülleri de yakında ekleniyor.',
   },
   {

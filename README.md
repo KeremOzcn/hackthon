@@ -1,4 +1,4 @@
-# İşler LearnTwin AI
+# İşleyen
 
 > AI-powered personalized learning analytics platform for the YKS 2026 exam preparation ecosystem.
 
@@ -21,7 +21,7 @@ LearnTwin AI creates a digital learning twin for each student by analyzing their
 - **Real-time Analytics** — Teacher dashboard with risk distribution, accuracy trends, and twin type breakdowns
 - **Gamification** — XP-based achievement system with 8 unlockable badges
 - **PDF Export** — Server-side generated student reports using `@react-pdf/renderer`
-- **Multi-subject Support** — Mathematics, Science, and Turkish literature
+- **Multi-subject Support** — Mathematics, Science, Turkish, and Social Sciences
 
 ---
 
@@ -33,7 +33,7 @@ LearnTwin AI creates a digital learning twin for each student by analyzing their
 | Language | TypeScript 5.0 |
 | Styling | Tailwind CSS v4 + Custom CSS Variables |
 | Database | Supabase PostgreSQL |
-| AI | Anthropic Claude Sonnet 4.6 |
+| AI | Anthropic Claude |
 | Charts | Recharts 3.8 |
 | PDF | @react-pdf/renderer 4.5 |
 | Deployment | Vercel |
@@ -82,11 +82,16 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## Project Structure
 
 ```
-├── docs/                       # Project documentation
-│   ├── PLAN.md                # Master plan & canonical decisions
-│   ├── ARCHITECTURE.md        # Technical architecture & data flow
-│   ├── SPRINTS.md            # Sprint plan & task checklist
-│   └── ROLES.md              # Team roles & file ownership
+├── plans/                      # Project plans (architecture, API, security, etc.)
+│   ├── README.md              # How to use these plans
+│   ├── roadmap.md             # Completed, in-progress, and pending tasks
+│   ├── architecture.md        # Technical architecture & data flow
+│   ├── api.md                 # API contracts & endpoints
+│   ├── business-logic.md      # Domain rules, twin classification, gamification
+│   ├── data-model.md          # Database schema & relationships
+│   ├── security.md            # Auth, threats, known vulnerabilities
+│   ├── ui-ux.md               # Design system & page specs
+│   └── testing.md             # E2E tests & coverage gaps
 ├── src/
 │   ├── app/                   # Next.js App Router
 │   │   ├── api/              # API routes
@@ -304,7 +309,7 @@ Generates a PDF report for a student session.
 
 ### File Ownership
 
-See `docs/ROLES.md` for the complete file ownership matrix and RACI chart.
+See team notes in the project wiki for the complete file ownership matrix.
 
 ---
 
@@ -353,13 +358,13 @@ vercel env add ANTHROPIC_API_KEY production
 | S2 | Analytics Dashboard | ✅ Complete |
 | S3 | PDF + Gamification | ✅ Complete |
 | S4 | Adaptive Questions + Class Management | ✅ Complete |
-| S5 | Deploy + Polish | ✅ Deployed, awaiting real Anthropic API key |
+| S5 | Deploy + Polish | ✅ Deployed — post-hackathon bug fixes in progress |
 
 ---
 
 ## License
 
-Private — Hackathon project for İşler LearnTwin AI.
+Private — Hackathon project for İşleyen.
 
 ---
 
