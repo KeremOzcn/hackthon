@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase-server'
 import { supabase } from '@/lib/supabase'
 import {
   Document,
@@ -316,6 +317,13 @@ function SessionPDF({ session }: { session: PDFSession }) {
 }
 
 export async function POST(req: NextRequest) {
+  const serverSupabase = await createClient()
+  const { data: { user } } = await serverSupabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   let body: { studentId?: string; sessionId?: string }
   try {
     body = await req.json()
@@ -332,7 +340,7 @@ export async function POST(req: NextRequest) {
   let query = supabase
     .from('learning_twin_results')
     .select(
-      'student_name,twin_type,dominant_pattern,cognitive_issue,behavioral_issue,risk_level,next_best_action,student_message,teacher_action,parent_message,accuracy,avg_time_seconds,hints_used,subject,topic,achievements,raw_answers,created_at'
+      'profile_id,student_name,twin_type,dominant_pattern,cognitive_issue,behavioral_issue,risk_level,next_best_action,student_message,teacher_action,parent_message,accuracy,avg_time_seconds,hints_used,subject,topic,achievements,raw_answers,created_at'
     )
     .limit(1)
 
@@ -346,6 +354,10 @@ export async function POST(req: NextRequest) {
 
   if (error || !data) {
     return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+  }
+
+  if (data.profile_id !== user.id) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   try {

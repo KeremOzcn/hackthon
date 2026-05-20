@@ -73,7 +73,7 @@ export default function TeacherPage() {
   }, [])
 
   const highRisk = sessions.filter(s => s.risk_level === 'high').length
-  const avgAcc = sessions.length ? Math.round(sessions.reduce((s, r) => s + r.accuracy, 0) / sessions.length) : 84
+  const avgAcc = sessions.length ? Math.round(sessions.reduce((s, r) => s + r.accuracy, 0) / sessions.length) : 0
   const pendingTasks = sessions.filter(s => s.risk_level !== 'low').length
   const attentionRequired = sessions.filter(s => s.risk_level === 'high' || s.risk_level === 'medium')
 
