@@ -4,6 +4,11 @@ import { supabase } from '@/lib/supabase'
 import { computeAchievements } from '@/lib/gamification'
 import type { Answer, LearningTwinResult } from '@/types'
 
+function getModel() {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) throw new Error('GEMINI_API_KEY is not configured')
+  return new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: 'gemini-2.0-flash' })
+}
 interface RequestBody {
   student: { id: string; name: string }
   subject: string
@@ -96,18 +101,10 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
 }`
 
   try {
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: 'AI service not configured' }, { status: 500 })
-    }
-    const genAI = new GoogleGenerativeAI(apiKey)
-
     const isDemo = student.id === 'demo-student'
 
     const [geminiOutcome, supabaseOutcome] = await Promise.allSettled([
-      genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      }),
+      getModel().generateContent(prompt),
       isDemo
         ? supabase
             .from('learning_twin_results')
@@ -136,7 +133,8 @@ JSON formatında yanıt ver (sadece JSON, başka hiçbir şey yazma):
     const raw = geminiResponse.response.text()
     let analysis: any
     try {
-      analysis = JSON.parse(raw)
+      const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+      analysis = JSON.parse(cleaned)
     } catch {
       const match = raw.match(/\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/)
       if (!match) throw new Error('No JSON in response')

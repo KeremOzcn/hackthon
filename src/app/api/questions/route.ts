@@ -16,16 +16,18 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const { data: prevSessions, error: prevError } = await supabase
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentId)
+
+    const prevSessions = isValidUUID ? await supabase
       .from('learning_twin_results')
       .select('twin_type, accuracy')
       .eq('profile_id', studentId)
       .order('created_at', { ascending: false })
       .limit(1)
+      .then(({ data, error }) => { if (error) throw new Error(error.message); return data })
+      : []
 
-    if (prevError) throw new Error(prevError.message)
-
-    const lastSession = prevSessions?.[0]
+    const lastSession = (prevSessions as any[])?.[0]
     const config = {
       twinType: (lastSession?.twin_type as import('@/types').TwinType) ?? null,
       previousAccuracy: lastSession?.accuracy ?? null,
