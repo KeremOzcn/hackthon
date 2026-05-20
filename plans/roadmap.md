@@ -41,14 +41,27 @@ scope: root
 - [x] Fix teacher dashboard — hardcoded `84` average accuracy fallback → `0`
 - [x] Ensure all API routes validate user ownership — added 401/403 to `/api/sessions/[id]` and `/api/export`
 
+## Completed (2026-05-20)
+
+- [x] Fix `/api/analyze` — replaced Anthropic with Google Gemini (`gemini-2.0-flash`), added env guard, hardened sanitization
+- [x] Fix demo session persistence — `profile_id: null` for demo users, query by `student_id` instead
+- [x] Fix landing redirect — created `src/app/student/page.tsx` redirecting to `/student/history`
+- [x] Fix branding inconsistencies — replaced "LearnTwin AI" with "İşleyen" in FAQ/testimonials
+- [x] Add `middleware.ts` — server-side route protection for `/student/*`, `/teacher/*`, `/parent/*`, `/api/*`
+- [x] Fix parent page — filters by `parent_students` linked children, removed hardcoded "10. Sınıf"
+- [x] Fix teacher dashboard — hardcoded `84` average accuracy fallback → `0`
+- [x] Ensure all API routes validate user ownership — added 401/403 to `/api/sessions/[id]` and `/api/export`
+- [x] Update E2E tests — created `e2e/helpers.ts` with `setDemoAuth()`, added auth to teacher/parent/student/navigation tests
+- [x] Update `SUNUM_TRANSKRIPTI.md` — branding, AI model, multi-table schema, middleware, API auth
+- [x] Final README.md update — all Anthropic references replaced with Google Gemini
+
 ## In Progress
 
-- [ ] Update E2E tests to authenticate before hitting protected routes (27 tests fail due to middleware redirects)
+_None_
 
 ## Pending
 
-- [ ] Update `SUNUM_TRANSKRIPTI.md` for showcase narrative
-- [ ] Final README.md update for external viewers
+_None_
 
 ## Last Session
 
