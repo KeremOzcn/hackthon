@@ -12,7 +12,7 @@
 
 ## Overview
 
-LearnTwin AI creates a digital learning twin for each student by analyzing their real-time exam behavior — speed, accuracy, hint usage, and confidence levels. Using Claude AI, it identifies learning personas, detects cognitive and behavioral issues, and generates actionable micro-interventions for students, teachers, and parents.
+İşleyen creates a digital learning twin for each student by analyzing their real-time exam behavior — speed, accuracy, hint usage, and confidence levels. Using Google Gemini AI, it identifies learning personas, detects cognitive and behavioral issues, and generates actionable micro-interventions for students, teachers, and parents.
 
 ### Key Features
 
@@ -33,7 +33,7 @@ LearnTwin AI creates a digital learning twin for each student by analyzing their
 | Language | TypeScript 5.0 |
 | Styling | Tailwind CSS v4 + Custom CSS Variables |
 | Database | Supabase PostgreSQL |
-| AI | Anthropic Claude |
+| AI | Google Gemini (gemini-2.0-flash) |
 | Charts | Recharts 3.8 |
 | PDF | @react-pdf/renderer 4.5 |
 | Deployment | Vercel |
@@ -47,7 +47,7 @@ LearnTwin AI creates a digital learning twin for each student by analyzing their
 - Node.js 20+
 - npm or yarn
 - Supabase account
-- Anthropic API key
+- Google Gemini API key
 
 ### Installation
 
@@ -75,7 +75,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 |----------|----------|-------------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous API key |
-| `ANTHROPIC_API_KEY` | Yes | Anthropic API key for Claude |
+| `GEMINI_API_KEY` | Yes | Google Gemini API key for AI analysis |
 
 ---
 
@@ -95,7 +95,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ├── src/
 │   ├── app/                   # Next.js App Router
 │   │   ├── api/              # API routes
-│   │   │   ├── analyze/     # Claude AI analysis endpoint
+│   │   │   ├── analyze/     # Gemini AI analysis endpoint
 │   │   │   ├── export/      # PDF generation endpoint
 │   │   │   ├── questions/   # Adaptive question engine
 │   │   │   ├── sessions/    # Student session history
@@ -188,7 +188,7 @@ WITH CHECK (true);
 
 ### `POST /api/analyze`
 
-Analyzes student answers using Claude AI and persists results.
+Analyzes student answers using Google Gemini AI and persists results.
 
 **Request:**
 ```json
@@ -302,7 +302,7 @@ Generates a PDF report for a student session.
 | Role | Name | Primary Focus |
 |------|------|---------------|
 | Frontend Lead | Kerem Özcan | Student flow, UI/UX |
-| Backend / AI Lead | Yağız Efe Gökçe | API routes, Claude integration, DB |
+| Backend / AI Lead | Yağız Efe Gökçe | API routes, Gemini integration, DB |
 | Dashboard Dev | Çiğdem Gökdağ | Teacher + Parent pages |
 | Full-stack Dev | Ezgi Turan | Features, integrations, bug hunt |
 | PM + Demo | Murat Emre Doğan | Story, QA, presentation |
@@ -332,7 +332,7 @@ See team notes in the project wiki for the complete file ownership matrix.
 ```bash
 vercel env add NEXT_PUBLIC_SUPABASE_URL production
 vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
-vercel env add ANTHROPIC_API_KEY production
+vercel env add GEMINI_API_KEY production
 ```
 
 ---
@@ -371,5 +371,5 @@ Private — Hackathon project for İşleyen.
 ## Acknowledgments
 
 - Built with [Next.js](https://nextjs.org) and [Vercel](https://vercel.com)
-- AI powered by [Anthropic Claude](https://anthropic.com)
+- AI powered by [Google Gemini](https://gemini.google.com)
 - Data layer by [Supabase](https://supabase.com)
