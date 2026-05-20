@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { setDemoAuth } from './helpers'
 
 test.describe('Teacher Dashboard', () => {
   test.beforeEach(async ({ page }) => {
+    await setDemoAuth(page, 'teacher')
     await page.goto('/teacher')
     await page.waitForSelector('h1:has-text("Sınıf Genel Bakışı")', { timeout: 15000 })
   })
@@ -78,6 +80,7 @@ test.describe('Teacher Dashboard', () => {
 
 test.describe('Teacher Analytics', () => {
   test('back button navigates to teacher dashboard', async ({ page }) => {
+    await setDemoAuth(page, 'teacher')
     await page.goto('/teacher/analytics')
     await page.waitForSelector('h1:has-text("Sınıf Analiz Raporları")', { timeout: 15000 })
 
@@ -91,6 +94,7 @@ test.describe('Teacher Analytics', () => {
 
 test.describe('Teacher Class Management', () => {
   test.beforeEach(async ({ page }) => {
+    await setDemoAuth(page, 'teacher')
     await page.goto('/teacher/class')
     await page.waitForSelector('h1:has-text("Sınıf Yönetimi")', { timeout: 15000 })
   })
@@ -117,6 +121,7 @@ test.describe('Teacher Class Management', () => {
 
 test.describe('Teacher Class Detail', () => {
   test('not-found state has working navigation button', async ({ page }) => {
+    await setDemoAuth(page, 'teacher')
     await page.goto('/teacher/class/non-existent-id')
     await page.waitForTimeout(3000)
 

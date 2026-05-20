@@ -1,11 +1,11 @@
-# İşler LearnTwin AI — Sunum ve Jüri Transkripti
+# İşleyen — Sunum ve Jüri Transkripti
 ## Veri Güvenliği & Teknik Derinlik Rehberi
 
 ---
 
 ## BÖLÜM 1: Açılış ve Proje Özeti (30 saniye)
 
-"İşler LearnTwin AI, öğrencinin sadece doğru/yanlışına değil, çözüm süresi, eminlik seviyesi, ipucu kullanımı ve düşünme açıklamaları gibi davranışsal sinyallere bakarak dijital bir öğrenme ikizi oluşturan yapay zeka tabanlı bir eğitim platformudur."
+"İşleyen, öğrencinin sadece doğru/yanlışına değil, çözüm süresi, eminlik seviyesi, ipucu kullanımı ve düşünme açıklamaları gibi davranışsal sinyallere bakarak dijital bir öğrenme ikizi oluşturan yapay zeka tabanlı bir eğitim platformudur."
 
 **Altını çiz:** Jüri muhtemelen şunu soracak: "Bu verileri nasıl topluyorsunuz ve güvenliğini nasıl sağlıyorsunuz?" — İşte bu rehber tam olarak bunun cevabı.
 
@@ -34,7 +34,7 @@ Platformumuz şu verileri toplar:
 
 **Veritabanı:** Supabase (PostgreSQL tabanlı, bulut yönetimli).
 - **RLS (Row Level Security):** `learning_twin_results` tablosunda aktif. Bu, bir öğrencinin kendi verisini sadece kendi görebilmesini garanti eder. Öğretmen/veli görünümleri ayrı yetkilendirme katmanlarından geçer.
-- **Şema:** Tek tablo yapısı (`learning_twin_results`), veri yayılmaz (data sprawl) önlenir.
+- **Şema:** Çok tablolu yapı (normalizasyon MVP sonrası eklendi). Temel tablolar: `profiles` (auth.users uzantısı), `classes` (öğretmen yönetimli), `class_enrollments` (öğrenci-sınıf bağlantısı), `parent_student_links` (veli-çocuk ilişkisi), `subjects` ve `topics` (müfredat), `questions` (soru bankası), `learning_twin_results` (temel analiz verisi).
 - **JSONB sütunu:** `raw_answers` alanı JSONB formatında saklanır — bu PostgreSQL'in binary JSON indeksleme ve sorgulama yeteneğini kullanır, ayrı bir NoSQL veritabanına ihtiyaç kalmaz.
 
 **Ortam Değişkenleri:**
@@ -48,7 +48,7 @@ Platformumuz şu verileri toplar:
   1. **Gerçek auth:** Supabase Auth cookie'leri (`sb-access-token`, `sb-refresh-token`) üzerinden `supabase.auth.getUser()`.
   2. **Demo modu:** `demo_auth=true` cookie'si ile jüri/development anında login gerektirmeden test yapılabilir.
 - Korunan rotalar (`/student/*`, `/teacher`, `/parent`) için: `if (!user && !isDemo)` durumunda `/auth/login`'e yönlendirme.
-- `/api` rotaları public olarak işaretlenmiştir (`pathname.startsWith('/api')`), ancak API route handler'ın kendi içinde auth kontrolü vardır.
+- `/api` rotaları public olarak işaretlenmiştir (`pathname.startsWith('/api')`), ancak API route handler'ların kendi içinde ek bir auth katmanı vardır: kullanıcı sahipliği doğrulanır (401/403 kontrolleri), RLS'nin yanında ek sunucu tarafı yetkilendirme sağlanır.
 
 **Auth akışı:**
 ```
@@ -60,11 +60,11 @@ Kullanıcı → Supabase Auth (email/şifre veya OAuth)
 
 ### 2.4 AI/LLM Güvenliği ve Veri İşleme
 
-**Claude API entegrasyonu (`src/app/api/analyze/route.ts`):**
-- API çağrısı sunucu tarafında yapılır. Öğrenci verisi asla client tarafından Anthropic API'ye gitmez.
+**Gemini API entegrasyonu (`src/app/api/analyze/route.ts`):**
+- API çağrısı sunucu tarafında yapılır. Öğrenci verisi asla client tarafından Gemini API'ye gitmez.
 - Prompt yapısı: Türkçe sistem mesajı + yapılandırılmış girdi (istatistikler + soru bazlı detay).
-- **Çıktı formatı:** Saf JSON zorlaması — `parseJSON(response)` ile Claude'un metin yanıtı JSON'a dönüştürülür. Eğer JSON parse hatası olursa, regex temizleme uygulanır.
-- **Veri saklama:** Claude API çağrısı anlıktır; Anthropic öğrenci verisini kendi eğitim verisi olarak kullanmaz (API kullanım koşulları gereği).
+- **Çıktı formatı:** Saf JSON zorlaması — `parseJSON(response)` ile Gemini'nin metin yanıtı JSON'a dönüştürülür. Eğer JSON parse hatası olursa, regex temizleme uygulanır.
+- **Veri saklama:** Gemini API çağrısı anlıktır; Google öğrenci verisini kendi eğitim verisi olarak kullanmaz (API kullanım koşulları gereği).
 
 ---
 
@@ -77,7 +77,7 @@ Kullanıcı → Supabase Auth (email/şifre veya OAuth)
 | Frontend | Next.js 15 (App Router) | SSR, API route handler'lar, React Server Components — tek kod tabanında full-stack. |
 | Styling | Tailwind CSS + Custom CSS variables | Glassmorphism UI için runtime CSS değişken kontrolü. |
 | Veritabanı | Supabase (PostgreSQL) | Ücretsiz tier, built-in Auth, RLS, JSONB desteği, instant API. |
-| AI | Anthropic Claude Sonnet 4.6 | Türkçe anlama ve pedagojik analizde yüksek performans. |
+| AI | Google Gemini (gemini-2.0-flash) | Türkçe anlama ve pedagojik analizde yüksek performans. |
 | Test | Playwright | E2E test — öğrenci akışından öğretmen paneline kadar. |
 
 **Hackathon için kritik karar:** MVP'de öğrenci verisi localStorage'da UUID ile tutulur. Bu, hızlı onboard (kayıt olmadan deneme) sağlar ama aynı cihazda kalıcıdır. Production'a geçişte Supabase Auth zorunlu hale getirilir.
@@ -102,8 +102,8 @@ Kullanıcı → Supabase Auth (email/şifre veya OAuth)
 
 5. API sunucusu (src/app/api/analyze/route.ts):
    a. computeStats(answers) → {accuracy, avgTimeSeconds, hintsUsed, highConfidenceWrong}
-   b. Claude prompt oluşturur (Türkçe, stats + per-question detail)
-   c. claude.messages.create(...) → AI yanıtı
+   b. Gemini prompt oluşturur (Türkçe, stats + per-question detail)
+   c. genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(...) → AI yanıtı
    d. parseJSON(response) → LearningTwinResult
    e. supabase.insert(row) → fire-and-forget (hata ignore edilmez ama client'a yansımaz)
    f. 200 OK + JSON döner
@@ -148,7 +148,7 @@ Kısıtlar:
 1. **Minimum veri toplama:** Sadece analiz için gerekli veriler toplanır (ad, cevaplar, süre, eminlik, ipucu, düşünme metni).
 2. **Anonimleştirme:** Primary key UUID'dir; öğrenci adı sadece rapor kişiselleştirmesi içindir.
 3. **RLS:** Supabase Row Level Security ile her öğrenci sadece kendi verisini görür.
-4. **Sunucu tarafı AI:** Öğrenci verisi asla client'tan Claude API'ye gitmez; `/api/analyze` route handler aracılık eder.
+4. **Sunucu tarafı AI:** Öğrenci verisi asla client'tan Gemini API'ye gitmez; `/api/analyze` route handler aracılık eder.
 5. **KVKK:** Aydınlatma metni ve veli izin akışı production'da eklenecek; hackathon MVP'sinde temel prensipler uygulanıyor.
 
 ### Soru 2: "AI analizi yanlış yaparsa ne olur?"
@@ -163,9 +163,9 @@ Kısıtlar:
 
 **Cevap yapısı:**
 - **Frontend:** Next.js static export veya Vercel edge network ile ölçeklenir.
-- **API:** `/api/analyze` Claude API çağrısı yaptığı için asenkron kuyruk (SQS/BullMQ) eklenebilir. Şu an senkron çağrı ama 5 soruluk MVP için yeterli.
+- **API:** `/api/analyze` Gemini API çağrısı yaptığı için asenkron kuyruk (SQS/BullMQ) eklenebilir. Şu an senkron çağrı ama 5 soruluk MVP için yeterli.
 - **Veritabanı:** Supabase PostgreSQL connection pooling ve read replica ile ölçeklenir. JSONB sütunu esnek ama indekslenebilir.
-- **AI maliyeti:** Her session 1 Claude çağrısı. 1000 öğrenci/gün = 1000 çağrı. Anthropic token bazlı fiyatlandırma; caching ve prompt optimizasyonu ile maliyet kontrol edilir.
+- **AI maliyeti:** Her session 1 Gemini çağrısı. 1000 öğrenci/gün = 1000 çağrı. Google token bazlı fiyatlandırma; caching ve prompt optimizasyonu ile maliyet kontrol edilir.
 
 ### Soru 4: "Neden Supabase? Kendi backend'inizi yazmadınız mı?"
 
@@ -184,16 +184,16 @@ Kısıtlar:
 ### Soru 6: "Öğrencinin düşünme açıklamaları metinsel veri — bunu nasıl analiz ediyorsunuz?"
 
 **Cevap yapısı:**
-- Metinsel düşünme açıklamaları Claude API'ye istatistiklerle birlikte gönderilir.
-- Claude, Türkçe metni analiz ederek hata tipini sınıflandırır (örn: "Yaş farkı arttığı için toplama yaptım" → "Yanlış değişken seçimi / problem modelleme zorluğu").
+- Metinsel düşünme açıklamaları Gemini API'ye istatistiklerle birlikte gönderilir.
+- Gemini, Türkçe metni analiz ederek hata tipini sınıflandırır (örn: "Yaş farkı arttığı için toplama yaptım" → "Yanlış değişken seçimi / problem modelleme zorluğu").
 - Metin verisi veritabanında JSONB içinde saklanır; ayrıca AI tarafından üretilen etiketler (cognitiveIssue, behavioralIssue) yapısal sütunlarda tutulur.
 
 ### Soru 7: "Veri modelinizde neden tek tablo var? Normalizasyon yok mu?"
 
 **Cevap yapısı:**
-- Hackathon MVP'sinde tek tablo (`learning_twin_results`) yeterli. Her session bir satır; `raw_answers` JSONB içinde soru detayları var.
-- Sprint 1'de öğrenci geçmişi ve konu listesi için normalizasyon planlanıyor (`students`, `sessions`, `answers` ayrımı).
-- Şu anki tek tablo, hızlı okuma/yazma ve basit sorgular için optimize.
+- MVP sonrası çok tablolu normalizasyon eklendi. Mevcut şema: `profiles`, `classes`, `class_enrollments`, `parent_student_links`, `subjects`, `topics`, `questions`, `learning_twin_results`.
+- `learning_twin_results` her session bir satır; `raw_answers` JSONB içinde soru detayları var.
+- Bu yapı hem ilişkisel bütünlüğü sağlar hem de JSONB esnekliğini korur.
 
 ---
 
@@ -218,7 +218,7 @@ Kısıtlar:
 
 **Client katmanı:** Next.js App Router. Öğrenci soru çözerken state tamamen client'ta tutulur (React state + localStorage). Bu, sunucu yükünü azaltır ve anlık etkileşim sağlar. Sadece 5. soru submit edildiğinde tek bir POST isteği gider.
 
-**Sunucu katmanı:** Next.js API Route Handler (`/api/analyze`). Burada iki işlem yapılır: Birincisi, istatistik hesaplama (pure function, hızlı). İkincisi, Claude API çağrısı (async, ~1-2 saniye). Sonuç hem client'a döner hem Supabase'e yazılır.
+**Sunucu katmanı:** Next.js API Route Handler (`/api/analyze`). Burada iki işlem yapılır: Birincisi, istatistik hesaplama (pure function, hızlı). İkincisi, Gemini API çağrısı (async, ~1-2 saniye). Sonuç hem client'a döner hem Supabase'e yazılır.
 
 **Veri katmanı:** Supabase PostgreSQL. RLS sayesinde veri izolasyonu veritabanı seviyesinde garantilenir. Öğretmen paneli veriyi Supabase'den çeker; bu sayede öğretmen, öğrencinin kendi cihazında olmayan veriyi görebilir."
 
@@ -226,7 +226,7 @@ Kısıtlar:
 
 ## BÖLÜM 7: Sunum Kapanışı (30 saniye)
 
-"LearnTwin AI olarak öğrencinin öğrenme mekanizmasını modellemek için yapay zekayı kullanıyoruz. Bunu yaparken veri güvenliğini ve gizliliği mimarinin merkezine koyduk: minimum veri toplama, sunucu tarafı AI analizi, Supabase RLS ile veri izolasyonu ve ileriye dönük KVKK uyumluluğu. Teknik olarak Next.js + Supabase + Claude stack'iyle hem hızlı prototipleme hem de ölçeklenebilirlik hedefliyoruz."
+"İşleyen olarak öğrencinin öğrenme mekanizmasını modellemek için yapay zekayı kullanıyoruz. Bunu yaparken veri güvenliğini ve gizliliği mimarinin merkezine koyduk: minimum veri toplama, sunucu tarafı AI analizi, Supabase RLS ile veri izolasyonu ve ileriye dönük KVKK uyumluluğu. Teknik olarak Next.js + Supabase + Gemini stack'iyle hem hızlı prototipleme hem de ölçeklenebilirlik hedefliyoruz."
 
 ---
 
@@ -234,7 +234,7 @@ Kısıtlar:
 
 | Dosya | Önemi |
 |---|---|
-| `middleware.ts:1-82` | Auth ve demo mod mantığı |
+| `src/middleware.ts` | Auth ve demo mod mantığı |
 | `src/app/api/analyze/route.ts` | AI analizi + Supabase insert |
 | `src/lib/supabase.ts` | Client/server Supabase client oluşturma |
 | `supabase/schema.sql` | RLS policy ve tablo yapısı |
@@ -251,4 +251,4 @@ Kısıtlar:
 
 ---
 
-*Hazırlayan: Claude Code | Tarih: 2026-05-17 | Proje: İşler LearnTwin AI Hackathon*
+*Hazırlayan: Claude Code | Tarih: 2026-05-20 | Proje: İşleyen Hackathon*

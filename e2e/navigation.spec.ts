@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setDemoAuth } from './helpers'
 
 test.describe('Top Navigation', () => {
   test.beforeEach(async ({ page }) => {
@@ -6,7 +7,7 @@ test.describe('Top Navigation', () => {
   })
 
   test('logo link navigates to home', async ({ page }) => {
-    const logo = page.locator('a:has-text("İşler LearnTwin AI")')
+    const logo = page.locator('a:has-text("İşleyen")')
     await expect(logo).toBeVisible()
     await logo.click()
     await expect(page).toHaveURL('/')
@@ -62,6 +63,7 @@ test.describe('Top Navigation', () => {
 
 test.describe('Page Header Component', () => {
   test('back button in PageHeader works', async ({ page }) => {
+    await setDemoAuth(page, 'teacher')
     await page.goto('/teacher/class')
     await page.waitForTimeout(3000)
 

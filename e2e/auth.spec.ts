@@ -39,7 +39,7 @@ test.describe('Auth Pages - Login', () => {
   })
 
   test('logo link navigates to home', async ({ page }) => {
-    const logo = page.locator('text=İşler LearnTwin AI').first()
+    const logo = page.locator('text=İşleyen').first()
     await expect(logo).toBeVisible()
   })
 })

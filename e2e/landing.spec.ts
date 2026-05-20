@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setDemoAuth } from './helpers'
 
 test.describe('Landing Page Buttons', () => {
   test.beforeEach(async ({ page }) => {
@@ -45,6 +46,7 @@ test.describe('Landing Page Buttons', () => {
     const teacherCard = page.locator('.grid').first().locator('.glass-card', { hasText: 'Öğretmen' })
     await teacherCard.click()
 
+    await setDemoAuth(page, 'teacher')
     const continueBtn = page.locator('button:has-text("Devam Et")')
     await continueBtn.click()
     // Page may redirect to login or load teacher page depending on auth state
@@ -55,6 +57,7 @@ test.describe('Landing Page Buttons', () => {
     const parentCard = page.locator('.grid').first().locator('.glass-card', { hasText: 'Veli' })
     await parentCard.click()
 
+    await setDemoAuth(page, 'parent')
     const continueBtn = page.locator('button:has-text("Devam Et")')
     await continueBtn.click()
     await expect(page).toHaveURL(/\/parent|auth\/login/)
@@ -75,6 +78,7 @@ test.describe('Landing Page Buttons', () => {
   })
 
   test('student name input accepts text and Enter key submits', async ({ page }) => {
+    await setDemoAuth(page, 'student')
     await page.locator('input[type="text"]').fill('Test User')
     await page.locator('input[type="text"]').press('Enter')
     await expect(page).toHaveURL(/\/student\/session|auth\/login/)

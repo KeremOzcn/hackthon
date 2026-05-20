@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { setDemoAuth } from './helpers'
 
 test.describe('Student Session Page', () => {
   test('redirects unauthenticated users to login', async ({ page }) => {
@@ -37,6 +38,7 @@ test.describe('Student Result Page', () => {
       }))
     })
 
+    await setDemoAuth(page, 'student')
     await page.goto('/student/result')
 
     // All three tabs should be visible
@@ -73,6 +75,7 @@ test.describe('Student Result Page', () => {
       }))
     })
 
+    await setDemoAuth(page, 'student')
     await page.goto('/student/result')
 
     // Test Geçmişim button

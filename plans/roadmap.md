@@ -38,21 +38,26 @@ scope: root
 - [x] Fix branding inconsistencies — replaced "LearnTwin AI" with "İşleyen" in FAQ/testimonials
 - [x] Add `middleware.ts` — server-side route protection for `/student/*`, `/teacher/*`, `/parent/*`, `/api/*`
 - [x] Fix parent page — filters by `parent_students` linked children, removed hardcoded "10. Sınıf"
+- [x] Fix teacher dashboard — hardcoded `84` average accuracy fallback → `0`
+- [x] Ensure all API routes validate user ownership — added 401/403 to `/api/sessions/[id]` and `/api/export`
 
 ## In Progress
 
-- [ ] Verify all E2E tests pass after bug fixes
-- [ ] Fix teacher dashboard — hardcoded `84` average accuracy fallback should be `0`
-- [ ] Ensure all API routes validate user ownership before returning data
+- [ ] Update E2E tests to authenticate before hitting protected routes (27 tests fail due to middleware redirects)
 
 ## Pending
 
 - [ ] Update `SUNUM_TRANSKRIPTI.md` for showcase narrative
-- [ ] Production build verification (`npm run build`)
 - [ ] Final README.md update for external viewers
 
 ## Last Session
 
 - Date: 2026-05-20
-- Left off: Reading existing docs, auditing codebase for gaps and bugs
-- Next: Fix critical bugs (AI model, demo persistence, missing route), then run E2E tests
+- Left off: All In Progress items completed and committed to main
+- Next: Update E2E tests for auth, update SUNUM_TRANSKRIPTI.md, finalize README
+
+## Next Steps (user decides priority)
+
+1. Fix E2E tests — add auth setup so 27 tests pass through middleware
+2. Update `SUNUM_TRANSKRIPTI.md` for showcase/presentation
+3. Final `README.md` polish for external viewers

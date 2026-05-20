@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test'
+import { setDemoAuth } from './helpers'
 
 test.describe('Parent Dashboard', () => {
   test.beforeEach(async ({ page }) => {
+    await setDemoAuth(page, 'parent')
     await page.goto('/parent')
     await page.waitForTimeout(3000)
   })
